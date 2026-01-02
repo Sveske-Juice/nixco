@@ -1,5 +1,3 @@
-{ lib }:
-device:
-''
-Device ${device.name}
+_: device: ''
+  Device ${device.name}
 ''

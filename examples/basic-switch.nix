@@ -1,4 +1,3 @@
-{lib, ...}:
-{
+_: {
   name = "basic ahh switch";
 }
