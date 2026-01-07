@@ -30,12 +30,27 @@
           The VLAN ID of the VLAN when this port is in access mode.
         '';
       };
-      nativeVLAN = lib.mkOption {
-        type = lib.types.int;
-        default = 1;
-        description = ''
-          native VLAN when interface is in trunking mode.
-        '';
+      trunk = lib.mkOption {
+        type = lib.types.submodule (_: {
+          options = {
+            nativeVLAN = lib.mkOption {
+              type = lib.types.int;
+              default = 1;
+              description = ''
+            native VLAN when interface is in trunking mode.
+              '';
+            };
+            allowed = lib.mkOption {
+              type = lib.types.str;
+              default = "1-1005";
+              description = ''
+                VLANs allowed on this trunk interface. Can be a single VLAN "x"
+                or a list of ranges: "a-b[, c-d, ...]", fx: 1-6, 99-200
+              '';
+            };
+          };
+        });
+        default = {};
       };
     };
   });

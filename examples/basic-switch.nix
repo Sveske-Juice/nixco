@@ -7,7 +7,10 @@ _: {
       switchport = {
         mode = "access";
         negotiate = false;
-        vlan = 99;
+        trunk = {
+          nativeVLAN = 1;
+          allowed = "5-1005";
+        };
       };
     };
   };
