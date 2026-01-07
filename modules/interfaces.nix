@@ -24,10 +24,17 @@
         description = "Enable Cisco Dynamic Trunking Protocol (DTP)";
       };
       vlan = lib.mkOption {
-        type = lib.types.nullOr lib.types.int;
+        type = lib.types.int;
         default = 1;
         description = ''
           The VLAN ID of the VLAN when this port is in access mode.
+        '';
+      };
+      nativeVLAN = lib.mkOption {
+        type = lib.types.int;
+        default = 1;
+        description = ''
+          native VLAN when interface is in trunking mode.
         '';
       };
     };
