@@ -6,6 +6,12 @@
   models = import ../lib/models;
   deviceSpecType = lib.types.submodule (_: {
     options = {
+      name = lib.mkOption {
+        type = lib.types.str;
+        default = "custom device";
+        example = "C9200L-24P-4G";
+        description = "Model name of the device";
+      };
       deviceType = lib.mkOption {
         type = lib.types.enum ["switch" "router"];
         description = ''

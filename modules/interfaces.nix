@@ -3,13 +3,30 @@
   config,
   ...
 }: let
+  switchPortType = lib.types.submodule (_: {
+    options = {
+      mode = lib.mkOption {
+        type = lib.types.nullOr (lib.types.enum [
+          "access"
+          "dynamic auto"
+          "dynamic desirable"
+          "trunk"
+        ]);
+        # Routers dont have switchports. Switches are default access
+        default =
+          if config.deviceSpec.deviceType == "switch"
+          then "access"
+          else null;
+      };
+    };
+  });
   interfaceType = lib.types.submodule (_: {
     options = {
       description = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
         example = "Link to LAN1";
-        description = "Descroption for this interface";
+        description = "Description for this interface";
       };
       shutdown = lib.mkOption {
         type = lib.types.bool;
@@ -17,19 +34,8 @@
         example = false;
       };
       switchport = lib.mkOption {
-        type = lib.types.bool;
-        example = false; # Routed port (L3)
-        description = ''
-          Determines if this is a L2 or L3 interface.
-          If switchport is false, then it's a routed
-          interface (L3).
-        '';
-        default =
-          if config.deviceSpec.deviceType == "switch"
-          then false
-          else if config.deviceSpec.deviceType == "router"
-          then true
-          else lib.asserts.assertMsg false "Unkown device type";
+        type = switchPortType;
+        default = {};
       };
       vlan = lib.mkOption {
         type = lib.types.int;
@@ -44,4 +50,23 @@ in {
       type = lib.types.attrsOf interfaceType;
     };
   };
+
+  config.assertions = [
+    {
+      assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
+      message = ''
+        Routers can not have switchport's
+      '';
+    }
+    {
+      assertion = lib.lists.all (int: builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces);
+      message = ''
+        The interface(s):
+        ${toString (builtins.filter (int: !builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces))}
+        Does not exist on ${config.deviceSpec.name}
+        Make sure you have spelled the interface correctly as specified
+        in the device specification.
+      '';
+    }
+  ];
 }

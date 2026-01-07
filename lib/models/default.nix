@@ -1,9 +1,3 @@
 {
-  "9200" = {
-    deviceType = "switch";
-    interfaces = [
-      "G0/0/1"
-      "G0/0/2"
-    ];
-  };
+  "C9200L-24P-4G" = import ./C9200L-24P-4G.nix;
 }
