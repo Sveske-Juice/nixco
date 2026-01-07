@@ -23,6 +23,13 @@
         default = true;
         description = "Enable Cisco Dynamic Trunking Protocol (DTP)";
       };
+      vlan = lib.mkOption {
+        type = lib.types.nullOr lib.types.int;
+        default = 1;
+        description = ''
+          The VLAN ID of the VLAN when this port is in access mode.
+        '';
+      };
     };
   });
   interfaceType = lib.types.submodule (_: {

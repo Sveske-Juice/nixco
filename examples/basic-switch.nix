@@ -7,6 +7,7 @@ _: {
       switchport = {
         mode = "access";
         negotiate = false;
+        vlan = 99;
       };
     };
   };
