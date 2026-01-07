@@ -6,6 +6,7 @@ _: {
       shutdown = false;
       switchport = {
         mode = "access";
+        negotiate = false;
       };
     };
   };

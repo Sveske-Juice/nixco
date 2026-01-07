@@ -8,15 +8,20 @@
       mode = lib.mkOption {
         type = lib.types.nullOr (lib.types.enum [
           "access"
-          "dynamic auto"
-          "dynamic desirable"
+          "dynamic auto" # DTP
+          "dynamic desirable" # DTP
           "trunk"
         ]);
         # Routers dont have switchports. Switches are default access
         default =
           if config.deviceSpec.deviceType == "switch"
-          then "access"
+          then "dynamic auto"
           else null;
+      };
+      negotiate = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable Cisco Dynamic Trunking Protocol (DTP)";
       };
     };
   });
@@ -52,6 +57,12 @@ in {
   };
 
   config.assertions = [
+    {
+      assertion = !lib.lists.all (int: int.switchport.mode == "access" && int.switchport.negotiate) (builtins.attrValues config.interfaces);
+      message = ''
+        You must disable negotiation when using access switchport mode.
+      '';
+    }
     {
       assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
       message = ''
