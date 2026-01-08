@@ -2,7 +2,7 @@ _: {
   device = "C9200L-24P-4G";
   iosVersion = "69.420.67";
   interfaces = {
-    "GigabitEthernet1/0/1" = {
+    "GigabitEthernet0/0" = {
       shutdown = false;
       description = "Link to LAN1";
       switchport = {

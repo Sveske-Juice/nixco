@@ -1,5 +1,5 @@
 config: {
-    description = "";
+    description = null;
     shutdown = true;
     switchport = {
         mode = if config.deviceSpec.deviceType == "switch"
