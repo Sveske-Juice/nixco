@@ -4,6 +4,7 @@ _: {
   interfaces = {
     "GigabitEthernet1/0/1" = {
       shutdown = false;
+      description = "Link to LAN1";
       switchport = {
         mode = "access";
         negotiate = false;

@@ -25,7 +25,7 @@
 
       perSystem = {pkgs, ...}: let
         deviceCfg = nixco-lib.evalDevice ./examples/basic-switch.nix;
-        rendered = nixco-lib.renderConfig {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
+        rendered = nixco-lib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
       in {
         packages.test = pkgs.writeText "test.cfg" rendered;
       };

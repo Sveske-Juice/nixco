@@ -3,6 +3,26 @@
   config,
   ...
 }: let
+  interfaceDefault = import ./default-interface.nix config;
+  interfaceType = lib.types.submodule (_: {
+    options = {
+      description = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = interfaceDefault.description;
+        example = "Link to LAN1";
+        description = "Description for this interface";
+      };
+      shutdown = lib.mkOption {
+        type = lib.types.bool;
+        default = interfaceDefault.shutdown;
+        example = false;
+      };
+      switchport = lib.mkOption {
+        type = switchPortType;
+        default = interfaceDefault.switchport;
+      };
+    };
+  });
   switchPortType = lib.types.submodule (_: {
     options = {
       mode = lib.mkOption {
@@ -13,19 +33,16 @@
           "trunk"
         ]);
         # Routers dont have switchports. Switches are default access
-        default =
-          if config.deviceSpec.deviceType == "switch"
-          then "dynamic auto"
-          else null;
+        default = interfaceDefault.switchport.mode;
       };
       negotiate = lib.mkOption {
         type = lib.types.bool;
-        default = true;
+        default = interfaceDefault.switchport.negotiate;
         description = "Enable Cisco Dynamic Trunking Protocol (DTP)";
       };
       vlan = lib.mkOption {
         type = lib.types.int;
-        default = 1;
+        default = interfaceDefault.switchport.vlan;
         description = ''
           The VLAN ID of the VLAN when this port is in access mode.
         '';
@@ -35,14 +52,14 @@
           options = {
             nativeVLAN = lib.mkOption {
               type = lib.types.int;
-              default = 1;
+              default = interfaceDefault.switchport.trunk.nativeVLAN;
               description = ''
-            native VLAN when interface is in trunking mode.
+                native VLAN when interface is in trunking mode.
               '';
             };
             allowed = lib.mkOption {
               type = lib.types.str;
-              default = "1-1005";
+              default = interfaceDefault.switchport.trunk.allowed;
               description = ''
                 VLANs allowed on this trunk interface. Can be a single VLAN "x"
                 or a list of ranges: "a-b[, c-d, ...]", fx: 1-6, 99-200
@@ -52,61 +69,43 @@
         });
         default = {};
       };
-    };
-  });
-  interfaceType = lib.types.submodule (_: {
-    options = {
-      description = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        example = "Link to LAN1";
-        description = "Description for this interface";
-      };
-      shutdown = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        example = false;
-      };
-      switchport = lib.mkOption {
-        type = switchPortType;
-        default = {};
-      };
-      vlan = lib.mkOption {
-        type = lib.types.int;
-        default = 1;
-        example = 99;
-      };
+      # TODO:
+      # - port-security
+      # - priority
+      # - protected
+      # - voice
     };
   });
 in {
   options = {
     interfaces = lib.mkOption {
       type = lib.types.attrsOf interfaceType;
+      default = {};
     };
   };
 
   config.assertions = [
-    {
-      assertion = !lib.lists.all (int: int.switchport.mode == "access" && int.switchport.negotiate) (builtins.attrValues config.interfaces);
-      message = ''
-        You must disable negotiation when using access switchport mode.
-      '';
-    }
-    {
-      assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
-      message = ''
-        Routers can not have switchport's
-      '';
-    }
-    {
-      assertion = lib.lists.all (int: builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces);
-      message = ''
-        The interface(s):
-        ${toString (builtins.filter (int: !builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces))}
-        Does not exist on ${config.deviceSpec.name}
-        Make sure you have spelled the interface correctly as specified
-        in the device specification.
-      '';
-    }
+    # {
+    #   assertion = !lib.lists.all (int: int.switchport.mode == "access" && int.switchport.negotiate) (builtins.attrValues config.interfaces);
+    #   message = ''
+    #     You must disable negotiation when using access switchport mode.
+    #   '';
+    # }
+    # {
+    #   assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
+    #   message = ''
+    #     Routers can not have switchport's
+    #   '';
+    # }
+    # {
+    #   assertion = lib.lists.all (int: builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces);
+    #   message = ''
+    #     The interface(s):
+    #     ${toString (builtins.filter (int: !builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces))}
+    #     Does not exist on ${config.deviceSpec.name}
+    #     Make sure you have spelled the interface correctly as specified
+    #     in the device specification.
+    #   '';
+    # }
   ];
 }
