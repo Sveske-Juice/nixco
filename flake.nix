@@ -28,6 +28,7 @@
         rendered = nixco-lib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
       in {
         packages.test = pkgs.writeText "test.cfg" rendered;
+        packages.default = pkgs.callPackage ./package.nix {};
       };
     });
 }

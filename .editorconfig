@@ -4,3 +4,7 @@ root = true
 [*.nix]
 indent_style = space
 indent_size = 2
+
+[*.{c,cpp,h,hpp}]
+indent_style = space
+indent_size = 2

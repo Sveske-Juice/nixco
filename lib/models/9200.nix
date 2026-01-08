@@ -1,0 +1,5 @@
+{
+  deviceType = "switch";
+  interfaces = [
+  ];
+}
