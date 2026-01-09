@@ -9,5 +9,10 @@
 
   nativeBuildInputs = [
     pkgs.cmake
+    pkgs.pkg-config
+  ];
+
+  buildInputs = [
+    pkgs.libssh
   ];
 }

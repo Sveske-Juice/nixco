@@ -29,6 +29,26 @@
       in {
         packages.test = pkgs.writeText "test.cfg" rendered;
         packages.default = pkgs.callPackage ./package.nix {};
+
+        devShells.default = pkgs.mkShellNoCC {
+          packages = with pkgs; [
+            clang-tools
+            clang
+            pkg-config
+            ninja
+            bear
+            meson
+            llvmPackages_latest.libstdcxxClang
+            llvmPackages_latest.libcxx
+            valgrind
+            libssh
+            just
+          ];
+
+          shellHook = ''
+            export PKG_CONFIG_PATH=${pkgs.libssh}/lib/pkgconfig:$PKG_CONFIG_PATH
+          '';
+        };
       };
     });
 }
