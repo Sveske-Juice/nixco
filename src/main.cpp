@@ -1,38 +1,42 @@
 #include <libssh/libssh.h>
 #include <iostream>
 
-#define HOST "192.168.2.129"
-#define USER "admin"
+#include "include/config.h"
+#include "include/transport.h"
+
+#define HOST ""
+#define USER ""
 
 int main(int argc, char **argv) {
-  ssh_session session = ssh_new();
-  if (!session) {
-    fprintf(stderr, "Failed to create SSH Session object");
-    exit(-1);
+  SshConfig sshConfig{};
+  sshConfig.host = HOST;
+  sshConfig.user = USER;
+  sshConfig.port = 22;
+
+  SshTransport transport(sshConfig);
+  auto err = transport.init();
+  if (err.has_value()) {
+    std::cerr << err.value() << std::endl;
+    return -1;
   }
 
-  ssh_options_set(session, SSH_OPTIONS_HOST, HOST);
-  ssh_options_set(session, SSH_OPTIONS_USER, USER);
-
-  int verbosity = SSH_LOG_NOLOG;
-  ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-
-  if (ssh_connect(session) != SSH_OK) {
-    std::string err = ssh_get_error(session);
-    ssh_free(session);
-    throw std::runtime_error("ssh_connect failed: " + err);
+  err = transport.connect();
+  if (err.has_value()) {
+    std::cerr << err.value() << std::endl;
+    return -1;
   }
 
-  // Authenticate using ssh-agent / ~/.ssh
-  if (ssh_userauth_publickey_auto(session, nullptr, nullptr)
-    != SSH_AUTH_SUCCESS) {
-    std::string err = ssh_get_error(session);
-    ssh_disconnect(session);
-    ssh_free(session);
-    throw std::runtime_error("auth failed: " + err);
+  err = transport.write("ps aux\n");
+  if (err.has_value()) {
+    std::cerr << err.value() << std::endl;
+    return -1;
   }
 
+  auto res = transport.read(4096);
+  if (res.has_value())
+    std::cout << "res: " << res.value() << std::endl;
+  else
+    std::cerr << "rc: " << ssh_get_error(&res.error()) << std::endl;
 
-  ssh_free(session);
   return 0;
 }

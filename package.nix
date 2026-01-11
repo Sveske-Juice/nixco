@@ -2,13 +2,12 @@
   pname = "nixco";
   version = "1.0.0";
 
-  src = pkgs.lib.sourceByRegex ./. [
-    "^src.*"
-    "CMakeLists.txt"
-  ];
+  src = ./.;
 
   nativeBuildInputs = [
-    pkgs.cmake
+    pkgs.clang
+    pkgs.meson
+    pkgs.ninja
     pkgs.pkg-config
   ];
 
