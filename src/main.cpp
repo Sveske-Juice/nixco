@@ -1,17 +1,22 @@
 #include <libssh/libssh.h>
 #include <iostream>
+#include <sys/socket.h>
 
 #include "include/config.h"
 #include "include/transport.h"
 
-#define HOST ""
-#define USER ""
+#define HOST "192.168.2.129"
+#define USER "admin"
 
 int main(int argc, char **argv) {
   SshConfig sshConfig{};
   sshConfig.host = HOST;
   sshConfig.user = USER;
   sshConfig.port = 22;
+
+  std::cout << "Password: ";
+  std::cin >> sshConfig.password;
+  std::cout << "trying: " << sshConfig.password << std::endl;
 
   SshTransport transport(sshConfig);
   auto err = transport.init();

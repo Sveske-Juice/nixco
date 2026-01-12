@@ -8,7 +8,6 @@
 #include "include/config.h"
 #include "include/transport.h"
 
-
 SshTransport::SshTransport(SshConfig _config) : config(std::move(_config)) {}
 SshTransport::~SshTransport() {
     std::cout << "Cleaning up SSH Transport" << std::endl;
@@ -34,19 +33,31 @@ std::optional<std::string> SshTransport::init() {
     ssh_options_set(session, SSH_OPTIONS_HOST, config.host.c_str());
     ssh_options_set(session, SSH_OPTIONS_USER, config.user.c_str());
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &config.verbosity);
+    // ssh_options_set (session, SSH_OPTIONS_KEY_EXCHANGE, "ssh-rsa,diffie-hellman-group-exchange-sha1");
 
     return std::nullopt;
 }
 
 std::optional<std::string> SshTransport::connect() {
+  ssh_options_set(session, SSH_OPTIONS_HOSTKEYS, "ssh-rsa");
+  ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE,
+      "diffie-hellman-group14-sha1,diffie-hellman-group1-sha1");
   if (ssh_connect(this->session) != SSH_OK) {
     return std::string("ssh_connect failed: ") + ssh_get_error(session);
   }
 
   // Authentication
-  if (ssh_userauth_publickey_auto(session, nullptr, nullptr)
-      != SSH_AUTH_SUCCESS) {
-    return std::string("auth failed: ") + ssh_get_error(session);
+  if (!this->config.password.empty()) {
+    if (ssh_userauth_password(this->session, NULL, this->config.password.c_str()) == SSH_AUTH_ERROR) {
+      return std::string("password auth failed: ") + ssh_get_error(this->session);
+    }
+  }
+  else {
+    // Try ssh key
+    if (ssh_userauth_publickey_auto(session, nullptr, nullptr)
+        != SSH_AUTH_SUCCESS) {
+      return std::string("auth failed: ") + ssh_get_error(this->session);
+    }
   }
 
   // Create SSH channel

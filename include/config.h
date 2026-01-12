@@ -8,6 +8,7 @@
 struct SshConfig {
   std::string host;
   std::string user;
+  std::string password;
   int16_t port;
   int verbosity = SSH_LOG_PROTOCOL;
 };
