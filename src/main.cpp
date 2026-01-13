@@ -1,8 +1,10 @@
+#include <expected>
 #include <libssh/libssh.h>
 #include <iostream>
-#include <sys/socket.h>
+#include <regex>
 
 #include "include/config.h"
+#include "include/strategy.h"
 #include "include/transport.h"
 
 #define HOST "192.168.2.129"
@@ -13,12 +15,12 @@ int main(int argc, char **argv) {
   sshConfig.host = HOST;
   sshConfig.user = USER;
   sshConfig.port = 22;
+  // sshConfig.identityFile = "/home/CyberVPL/.ssh/id_ed25519";
+  sshConfig.verbosity = SSH_LOG_WARN;
 
-  std::cout << "Password: ";
-  std::cin >> sshConfig.password;
-  std::cout << "trying: " << sshConfig.password << std::endl;
-
+  Strategy defaultStrategy;
   SshTransport transport(sshConfig);
+
   auto err = transport.init();
   if (err.has_value()) {
     std::cerr << err.value() << std::endl;
@@ -31,17 +33,18 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  err = transport.write("ps aux\n");
-  if (err.has_value()) {
-    std::cerr << err.value() << std::endl;
+  // Wait for prompt
+  auto prompt = defaultStrategy.wait_for_prompt(transport);
+  if (!prompt.has_value())
+    return -1;
+
+  std::string config = "terminal length 0\nshow version\nenable\ncisco\nshow vl br";
+  auto res = defaultStrategy.apply(transport, config);
+  if (res.has_value()) {
+    std::cerr << res.value() << std::endl;
     return -1;
   }
 
-  auto res = transport.read(4096);
-  if (res.has_value())
-    std::cout << "res: " << res.value() << std::endl;
-  else
-    std::cerr << "rc: " << ssh_get_error(&res.error()) << std::endl;
-
   return 0;
 }
+

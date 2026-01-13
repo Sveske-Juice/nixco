@@ -8,7 +8,8 @@ libssh_dep = dependency('libssh', required : true)
 
 srcs = [
   'src/main.cpp',
-  'src/transport.cpp'
+  'src/transport.cpp',
+  'src/strategy.cpp',
 ]
 
 executable('nixco',

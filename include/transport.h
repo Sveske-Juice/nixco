@@ -25,6 +25,8 @@ private:
   ssh_session session;
   ssh_channel channel;
 
+  ssh_key loadIdentity(const std::string& path);
+
 public:
   explicit SshTransport(SshConfig _config);
   ~SshTransport();
@@ -33,6 +35,17 @@ public:
   std::optional<std::string> connect() override;
   std::optional<std::string> write(const std::string& cmd) override;
   std::expected<std::string, int> read(const uint32_t count) override;
+  bool is_open() const;
 };
+
+int passphrase_callback(
+    const char *prompt,
+    char *buf,
+    size_t len,
+    int echo,
+    int verify,
+    void *userdata
+);
+
 
 #endif
