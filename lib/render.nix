@@ -41,6 +41,8 @@ in {
     ! Device ${device.name}
 
     ! Config: ${builtins.toJSON device}
+
+    configure terminal
   '' +
   mkTitle "Interfaces"
   +
