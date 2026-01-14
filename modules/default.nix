@@ -5,7 +5,10 @@
     ./interfaces.nix
   ];
   options = {
-    name = lib.mkOption {type = lib.types.str;};
+    hostname = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      example = "SW1";
+    };
     iosVersion = lib.mkOption {
       type = lib.types.str;
       default = "0.0.0";

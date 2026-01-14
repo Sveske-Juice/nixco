@@ -42,12 +42,13 @@ let
     builtins.match ".*[-,].*" key != null;
 in {
   render = {lib, ...}: device: ''
-    ! Device ${device.name}
-
     ! Config: ${builtins.toJSON device}
 
     configure terminal
-  '' +
+  ''
+  +
+  lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
+  +
   mkTitle "Interfaces"
   +
   mkSubTitle "RESET"
