@@ -49,6 +49,16 @@ in {
   +
   lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
   +
+  mkTitle "VLANs"
+  +
+  (builtins.concatStringsSep "" (builtins.map (vlan:
+  ''
+    vlan ${toString vlan.id}
+    name ${vlan.name}
+  '') device.vlans))
+  +
+  lib.optionalString ((builtins.length device.vlans) != 0) "exit\n"
+  +
   mkTitle "Interfaces"
   +
   mkSubTitle "RESET"

@@ -3,6 +3,17 @@ _: {
   device = "C9200L-24P-4G";
   iosVersion = "69.420.67";
 
+  vlans = [
+    {
+      id = 999;
+      name = "Blackhole";
+    }
+    {
+      id = 150;
+      name = "Voice";
+    }
+  ];
+
   interfaces = {
     "vlan10" = {
       shutdown = false;

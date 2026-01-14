@@ -3,6 +3,7 @@
     ./assertions.nix
     ./device.nix
     ./interfaces.nix
+    ./vlan.nix
   ];
   options = {
     hostname = lib.mkOption {
