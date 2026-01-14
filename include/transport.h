@@ -28,7 +28,7 @@ private:
   ssh_session session;
   ssh_channel channel;
 
-  ssh_key loadIdentity(const std::string& path);
+  std::expected<ssh_key, std::string> loadIdentity(const std::string& path);
 
 public:
   explicit SshTransport(SshConfig _config);

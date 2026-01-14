@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -60,7 +61,7 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
     buf += chunk.value();
 
     if (buf.find("--More--") != std::string::npos) {
-      std::cerr << "WARNING: Encounted paged output. Disable with \"terminal length 0\"\nRefusing to continue" << std::endl;
+      spdlog::warn("Encounted paged output. Disable with \"terminal length 0\"\nRefusing to continue");
       return std::unexpected<int>(-1);
     }
 

@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <expected>
 #include <fmt/base.h>
 #include <fmt/format.h>
@@ -73,14 +74,14 @@ int main(int argc, char **argv) {
   // Build Transport and Strategy from CLI Args
   auto transportPtr = Transport::create_from_cliargs(cliparser);
   if (!transportPtr) {
-    std::cerr << transportPtr.error() << std::endl;
+    spdlog::error(transportPtr.error());
     return EX_USAGE;
   }
   Transport &transport = *transportPtr.value();
 
   auto strategyPtr = Strategy::create_from_cliargs(cliparser);
   if (!strategyPtr) {
-    std::cerr << strategyPtr.error() << std::endl;
+    spdlog::error(strategyPtr.error());
     return EX_USAGE;
   }
   const Strategy &strategy = *strategyPtr.value();
@@ -95,26 +96,29 @@ int main(int argc, char **argv) {
 
   // Setup transport
   auto err = transport.init();
-  if (err.has_value()) {
-    std::cerr << err.value() << std::endl;
+  if (err) {
+    spdlog::error(*err);
     return -1;
   }
 
   err = transport.connect();
-  if (err.has_value()) {
-    std::cerr << err.value() << std::endl;
+  if (err) {
+    spdlog::error(*err);
     return -1;
   }
 
   // Wait for prompt
   auto prompt = strategy.wait_for_prompt(transport);
-  if (!prompt.has_value())
-    return -1;
+  if (!prompt) {
+    spdlog::error("Failed to get first PTY prompt from remote. rc = {:d}", prompt.error());
+    return prompt.error();
+  }
 
   // Run strategy
+  spdlog::info("Applying {:s}...", cfgPath);
   auto res = strategy.apply(transport, config);
-  if (res.has_value()) {
-    std::cerr << res.value() << std::endl;
+  if (res) {
+    spdlog::error(*res);
     return -1;
   }
   return EX_OK;

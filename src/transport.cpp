@@ -8,6 +8,7 @@
 #include <libssh/libssh.h>
 #include <memory>
 #include <optional>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <string>
 #include <fmt/format.h>
@@ -18,18 +19,18 @@
 
 SshTransport::SshTransport(SshConfig _config) : config(std::move(_config)) {}
 SshTransport::~SshTransport() {
-    std::cout << "Cleaning up SSH Transport" << std::endl;
+  spdlog::info("Cleaning up SSH transport");
 
-    if (this->channel) {
-      ssh_channel_send_eof(this->channel);
-      ssh_channel_close(this->channel);
-      ssh_channel_free(this->channel);
-    }
+  if (this->channel) {
+    ssh_channel_send_eof(this->channel);
+    ssh_channel_close(this->channel);
+    ssh_channel_free(this->channel);
+  }
 
-    if (this->session) {
-      ssh_disconnect(this->session);
-      ssh_free(this->session);
-    }
+  if (this->session) {
+    ssh_disconnect(this->session);
+    ssh_free(this->session);
+  }
 }
 
 std::optional<std::string> SshTransport::init() {
@@ -57,12 +58,12 @@ std::optional<std::string> SshTransport::connect() {
   // Authentication
   // Use provided identity (with potential password protected key)
   if (!this->config.identityFile.empty()) {
-    ssh_key key = loadIdentity(this->config.identityFile);
+    auto key = loadIdentity(this->config.identityFile);
     if (!key)
-      return "Failed to load identity file";
+      return key.error(); // Propagate error
 
-    int rc = ssh_userauth_publickey(this->session, nullptr, key);
-    ssh_key_free(key);
+    int rc = ssh_userauth_publickey(this->session, nullptr, *key);
+    ssh_key_free(*key);
 
     if (rc != SSH_AUTH_SUCCESS) {
       return fmt::format("Failed to auth with provided identity: ", ssh_get_error(this->session));
@@ -73,9 +74,10 @@ std::optional<std::string> SshTransport::connect() {
     // Try keys on host
     int rc = ssh_userauth_publickey_auto(session, nullptr, nullptr);
     if (rc == SSH_AUTH_DENIED) {
-      std::cout << "Public key not accepted. Trying password auth" << std::endl;
+      spdlog::info("Public key not accepted. Trying password auth");
 
       // Try password
+      // TODO: hide user input
       std::cout << "password: ";
       std::string input;
       std::cin >> input;
@@ -138,7 +140,7 @@ std::expected<std::string, int> SshTransport::read(const uint32_t count) {
   return out;
 }
 
-ssh_key SshTransport::loadIdentity(const std::string& path) {
+std::expected<ssh_key, std::string> SshTransport::loadIdentity(const std::string& path) {
   ssh_key key = nullptr;
 
   // Try without passphrase
@@ -150,14 +152,12 @@ ssh_key SshTransport::loadIdentity(const std::string& path) {
       &key
       );
 
-  std::cout << rc << std::endl;
   if (rc == SSH_OK) {
     return key; // unencrypted key
   }
 
   if (rc == SSH_EOF) {
-    std::cerr << "identityFile file not found" << std::endl;
-    return nullptr;
+    return std::unexpected<std::string>("identity file not found");
   }
 
   // Try with passphrase
@@ -176,8 +176,7 @@ ssh_key SshTransport::loadIdentity(const std::string& path) {
   explicit_bzero(passphrase.data(), passphrase.size());
 
   if (rc != SSH_OK) {
-    std::cerr << ssh_get_error(this->session) << std::endl;
-    return nullptr;
+    return std::unexpected<std::string>(ssh_get_error(this->session));
   }
 
   return key;
