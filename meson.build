@@ -15,6 +15,7 @@ configure_file(
 # Find via pkg-config
 libssh = dependency('libssh', method: 'pkg-config', required : true)
 fmt = dependency('fmt', method: 'pkg-config', required : true)
+spdlog = dependency('spdlog', method: 'pkg-config', required : true)
 
 srcs = [
   'src/main.cpp',
@@ -25,7 +26,7 @@ srcs = [
 
 executable('nixco',
   srcs,
-  dependencies : [libssh, fmt ],
+  dependencies : [libssh, fmt, spdlog],
   include_directories: include_directories('include'),
   install : true
 )

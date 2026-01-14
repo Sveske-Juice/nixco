@@ -14,5 +14,6 @@
   buildInputs = [
     pkgs.libssh
     pkgs.fmt
+    pkgs.spdlog
   ];
 }

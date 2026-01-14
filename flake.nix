@@ -45,6 +45,7 @@
             just
             gdb
             fmt
+            spdlog
           ];
 
           shellHook = ''

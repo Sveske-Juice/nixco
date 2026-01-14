@@ -1,10 +1,9 @@
-#include <cstdio>
 #include <expected>
 #include <fmt/base.h>
 #include <fmt/format.h>
 #include <libssh/libssh.h>
+#include <spdlog/spdlog.h>
 #include <iostream>
-#include <print>
 #include <sysexits.h>
 #include <fstream>
 #include <system_error>
@@ -12,6 +11,7 @@
 #include "include/strategy.h"
 #include "include/transport.h"
 #include "include/cli_parser.h"
+#include "spdlog/common.h"
 #include "version.h"
 
 std::string read_file(const std::string& path) {
@@ -57,6 +57,8 @@ void printUsage() {
 
 int main(int argc, char **argv) {
   CliParser cliparser(argc, argv);
+  spdlog::set_level(spdlog::level::info);
+  spdlog::set_pattern("[%^%l%$] %v");
 
   if (cliparser.cmdOptionExists("-h") || cliparser.cmdOptionExists("--help")) {
     printUsage();
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
   // Read config
   auto cfgPath = cliparser.getCmdOption("-f").value_or(cliparser.getCmdOption("--file").value_or(""));
   if (cfgPath.empty()) {
-    std::cerr << "No config file provided" << std::endl;
+    spdlog::error("No config file provided");
     return EX_USAGE;
   }
   std::string config = read_file(cfgPath);
