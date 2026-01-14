@@ -3,8 +3,9 @@ project(
   'cpp',
   default_options : ['cpp_std=c++23'])
 
-# Find libssh via pkg-config
-libssh_dep = dependency('libssh', required : true)
+# Find via pkg-config
+libssh = dependency('libssh', method: 'pkg-config', required : true)
+fmt = dependency('fmt', method: 'pkg-config', required : true)
 
 srcs = [
   'src/main.cpp',
@@ -15,6 +16,6 @@ srcs = [
 
 executable('nixco',
   srcs,
-  dependencies : libssh_dep,
+  dependencies : [libssh, fmt ],
   install : true
 )

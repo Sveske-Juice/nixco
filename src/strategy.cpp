@@ -1,4 +1,5 @@
 #include <expected>
+#include <fmt/format.h>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -113,5 +114,5 @@ std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_clia
     throw std::runtime_error("not impl");
   }
 
-  return std::unexpected<std::string>(std::string("Unrecognized strategy: ") + strategy);
+  return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
 }

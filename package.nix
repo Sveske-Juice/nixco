@@ -13,5 +13,6 @@
 
   buildInputs = [
     pkgs.libssh
+    pkgs.fmt
   ];
 }

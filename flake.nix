@@ -44,6 +44,7 @@
             libssh
             just
             gdb
+            fmt
           ];
 
           shellHook = ''

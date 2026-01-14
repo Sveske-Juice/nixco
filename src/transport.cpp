@@ -3,13 +3,14 @@
 #include <cstring>
 #include <ctime>
 #include <expected>
+#include <fmt/base.h>
 #include <iostream>
 #include <libssh/libssh.h>
-#include <libssh/callbacks.h>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <fmt/format.h>
 
 #include "include/cli_parser.h"
 #include "include/config.h"
@@ -42,12 +43,6 @@ std::optional<std::string> SshTransport::init() {
     ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &config.verbosity);
     ssh_options_set(session, SSH_OPTIONS_TIMEOUT, &config.timeout);
     
-    // Callbacks
-    // ssh_callbacks_struct callbacks{};
-    // callbacks.auth_function = passphrase_callback;
-    // callbacks.userdata = nullptr;
-    // ssh_set_callbacks(session, &callbacks);
-
     return std::nullopt;
 }
 
@@ -56,7 +51,7 @@ std::optional<std::string> SshTransport::connect() {
   ssh_options_set(session, SSH_OPTIONS_KEY_EXCHANGE,
       "diffie-hellman-group14-sha1,diffie-hellman-group1-sha1,curve25519-sha256,ssh-ed25519");
   if (ssh_connect(this->session) != SSH_OK) {
-    return std::string("ssh_connect failed: ") + ssh_get_error(session);
+    return fmt::format("ssh_connect failed: {:s}", ssh_get_error(this->session));
   }
 
   // Authentication
@@ -70,7 +65,7 @@ std::optional<std::string> SshTransport::connect() {
     ssh_key_free(key);
 
     if (rc != SSH_AUTH_SUCCESS) {
-      return std::string("Failed to auth with provided identity: ") + ssh_get_error(this->session);
+      return fmt::format("Failed to auth with provided identity: ", ssh_get_error(this->session));
     }
   }
   // Try auto public key or password
@@ -86,11 +81,11 @@ std::optional<std::string> SshTransport::connect() {
       std::cin >> input;
 
       if (ssh_userauth_password(this->session, NULL, input.c_str()) == SSH_AUTH_ERROR) {
-        return std::string("password auth failed: ") + ssh_get_error(this->session);
+        return fmt::format("password auth failed: ", ssh_get_error(this->session));
       }
     }
     else if (rc != SSH_AUTH_SUCCESS) {
-      return std::string("auth failed: ") + ssh_get_error(this->session);
+      return fmt::format("auth failed: {:s}", ssh_get_error(this->session));
     }
   }
 
@@ -98,19 +93,19 @@ std::optional<std::string> SshTransport::connect() {
   // Create SSH channel
   this->channel = ssh_channel_new(this->session);
   if (!this->channel) {
-    return std::string("Failed to create channel: ") + ssh_get_error(this->session);
+    return fmt::format("Failed to create channel: {:s}", ssh_get_error(this->session));
   }
 
   if (ssh_channel_open_session(this->channel) < 0) {
-    return std::string("Failed to open session: ") + ssh_get_error(this->session);
+    return fmt::format("Failed to open session: ", ssh_get_error(this->session));
   }
 
   if (ssh_channel_request_pty(this->channel) != SSH_OK) {
-    return std::string("Failed to request PTY: ") + ssh_get_error(this->session);
+    return fmt::format("Failed to request PTY: ", ssh_get_error(this->session));
   }
 
   if (ssh_channel_request_shell(this->channel) != SSH_OK) {
-    return std::string("Failed to request shell: ") + ssh_get_error(this->session);
+    return fmt::format("Failed to request shell: ", ssh_get_error(this->session));
   }
 
   return std::nullopt;
@@ -118,7 +113,7 @@ std::optional<std::string> SshTransport::connect() {
 
 std::optional<std::string> SshTransport::write(const std::string& cmd) {
   if (ssh_channel_write(this->channel, cmd.data(), cmd.size()) == SSH_ERROR)
-    return std::string("Failed to write to SSH Channel: ") + ssh_get_error(this->session);
+    return fmt::format("Failed to write to SSH Channel: ", ssh_get_error(this->session));
 
   return std::nullopt;
 }
@@ -192,8 +187,6 @@ bool SshTransport::is_open() const {
   return ssh_channel_is_open(this->channel) && !ssh_channel_is_eof(this->channel);
 }
 
-
-
 std::expected<std::unique_ptr<Transport>, std::string> Transport::create_from_cliargs(const CliParser &cliparser) {
   auto transportType =
     cliparser.getCmdOption("-t")
@@ -226,5 +219,5 @@ std::expected<std::unique_ptr<Transport>, std::string> Transport::create_from_cl
     throw std::runtime_error("not impl");
   }
 
-  return std::unexpected<std::string>(std::string("Unrecognized transportType: ") + transportType);
+  return std::unexpected<std::string>(fmt::format("Unrecognized transport type: {:s}", transportType));
 }

@@ -1,3 +1,4 @@
+# Generate compile_commands
 build:
   rm -rf build/
   rm -rf compile_commands.json
