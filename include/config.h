@@ -9,8 +9,8 @@ struct SshConfig {
   std::string host;
   std::string user;
   std::string identityFile;
-  int16_t port;
-  int verbosity = SSH_OPTIONS_LOG_VERBOSITY;
+  int16_t port = 22;
+  int verbosity = SSH_LOG_WARN;
   int timeout = 5;
 };
 

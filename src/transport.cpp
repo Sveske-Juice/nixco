@@ -1,13 +1,17 @@
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <ctime>
 #include <expected>
 #include <iostream>
 #include <libssh/libssh.h>
 #include <libssh/callbacks.h>
+#include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 
+#include "include/cli_parser.h"
 #include "include/config.h"
 #include "include/transport.h"
 
@@ -186,4 +190,41 @@ ssh_key SshTransport::loadIdentity(const std::string& path) {
 
 bool SshTransport::is_open() const {
   return ssh_channel_is_open(this->channel) && !ssh_channel_is_eof(this->channel);
+}
+
+
+
+std::expected<std::unique_ptr<Transport>, std::string> Transport::create_from_cliargs(const CliParser &cliparser) {
+  auto transportType =
+    cliparser.getCmdOption("-t")
+        .value_or(cliparser.getCmdOption("--transport").value_or(""));
+  if (transportType.empty())
+    return std::unexpected<std::string>("No transport supplied");
+
+  if (transportType == "ssh") {
+    SshConfig config;
+    auto host = cliparser.getCmdOption("--host");
+    if (!host) return std::unexpected<std::string>("Expected a host");
+
+    auto username = cliparser.getCmdOption("-u").value_or(cliparser.getCmdOption("--user").value_or(""));
+    if (username.empty()) return std::unexpected<std::string>("Expected user");
+
+    auto port = cliparser.getCmdOption("-p").value_or(cliparser.getCmdOption("--port").value_or(""));
+    if (!port.empty()) {
+      config.port = std::stoi(port);
+    }
+
+    auto identityFile = cliparser.getCmdOption("-i").value_or(cliparser.getCmdOption("--identity").value_or(""));
+
+    config.identityFile = identityFile;
+    config.host = *host;
+    config.user = username;
+
+    return std::make_unique<SshTransport>(config);
+  }
+  else if (transportType == "serial") {
+    throw std::runtime_error("not impl");
+  }
+
+  return std::unexpected<std::string>(std::string("Unrecognized transportType: ") + transportType);
 }

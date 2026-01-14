@@ -10,6 +10,7 @@ srcs = [
   'src/main.cpp',
   'src/transport.cpp',
   'src/strategy.cpp',
+  'src/cli_parser.cpp',
 ]
 
 executable('nixco',

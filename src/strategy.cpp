@@ -1,7 +1,9 @@
 #include <expected>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <regex>
 
@@ -11,39 +13,38 @@
 #define CHUNK 4096
 
 std::string Strategy::strip_ansi(const std::string &s) const {
-    std::string res = s;
-    // Remove CSI sequences: ESC [ ... letters
-    static const std::regex csi("\x1B\\[[0-9;?]*[A-Za-z]");
-    res = std::regex_replace(res, csi, "");
+  // This is ChatGPT, too lazy to do it myself
+  std::string res = s;
 
-    // Remove DCS / OSC sequences: ESC P ... ESC
-    static const std::regex osc("\x1BP.*?\x1B\\\\");
-    res = std::regex_replace(res, osc, "");
+  static const std::regex csi("\x1B\\[[0-9;?]*[A-Za-z]");
+  res = std::regex_replace(res, csi, "");
 
-    // Remove other ESC sequences
-    static const std::regex esc("\x1B.");
-    res = std::regex_replace(res, esc, "");
+  static const std::regex osc("\x1BP.*?\x1B\\\\");
+  res = std::regex_replace(res, osc, "");
 
-    return res;
+  static const std::regex esc("\x1B.");
+  res = std::regex_replace(res, esc, "");
+
+  return res;
 }
 
 bool Strategy::looks_like_prompt(const std::string &buffer) const {
-    auto s = strip_ansi(buffer);
+  auto s = strip_ansi(buffer);
 
-    while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' '))
-        s.pop_back();
+  while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' '))
+    s.pop_back();
 
-    if (s.empty())
-        return false;
+  if (s.empty())
+    return false;
 
-    static const std::string prompt_chars = "$#>%";
-    return !s.empty() && prompt_chars.find(s.back()) != std::string::npos;
+  static const std::string prompt_chars = "$#>%";
+  return !s.empty() && prompt_chars.find(s.back()) != std::string::npos;
 }
 
-  std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport) const {
-    std::string emptyEcho;
-    return wait_for_prompt(transport, emptyEcho);
-  }
+std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport) const {
+  std::string emptyEcho;
+  return wait_for_prompt(transport, emptyEcho);
+}
 
 std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, std::string &cmd) const {
   std::string buf;
@@ -99,17 +100,18 @@ std::optional<std::string> Strategy::apply(Transport &transport, const std::stri
   return std::nullopt;
 }
 
-
-void Strategy::strip_echo(std::string &buffer, std::string &echo) const {
-  // std::cout << "buffer: " << buffer << "\necho: " << echo << std::endl;
-  while (!buffer.empty() && !echo.empty()) {
-    if (buffer.front() == echo.front()) {
-      // std::cout << "Strippig: " << buffer.front() << std::endl;
-      buffer.erase(buffer.begin());
-      echo.erase(echo.begin());
-    } else {
-      break;
-    }
+std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_cliargs(const CliParser &cliparser) {
+  auto strategy = cliparser.getCmdOption("-s").value_or(cliparser.getCmdOption("--strategy").value_or(""));
+  if (strategy.empty()) {
+    strategy = "runcmds"; // default
   }
-}
 
+  if (strategy == "runcmds") {
+    return std::make_unique<Strategy>();
+  }
+  else if (strategy == "erasereload") {
+    throw std::runtime_error("not impl");
+  }
+
+  return std::unexpected<std::string>(std::string("Unrecognized strategy: ") + strategy);
+}

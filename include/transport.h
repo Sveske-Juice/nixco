@@ -2,9 +2,11 @@
 #define TRANSPORT_H
 
 #include "config.h"
+#include "include/cli_parser.h"
 #include <cstdint>
 #include <expected>
 #include <libssh/libssh.h>
+#include <memory>
 #include <optional>
 #include <string>
 
@@ -16,6 +18,7 @@ public:
   [[nodiscard]] virtual std::optional<std::string> write(const std::string& msg) = 0;
   [[nodiscard]] virtual std::expected<std::string, int> read(const uint32_t count) = 0;
   virtual bool is_open() const = 0;
+  static std::expected<std::unique_ptr<Transport>, std::string> create_from_cliargs(const CliParser &cliparser);
 };
 
 
