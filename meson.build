@@ -3,6 +3,15 @@ project(
   'cpp',
   default_options : ['cpp_std=c++23'])
 
+conf = configuration_data()
+conf.set('PROJECT_VERSION', run_command('cat', 'VERSION', check : true).stdout().strip())
+
+configure_file(
+  input: 'include/version.h.in',
+  output: 'version.h',
+  configuration: conf
+)
+
 # Find via pkg-config
 libssh = dependency('libssh', method: 'pkg-config', required : true)
 fmt = dependency('fmt', method: 'pkg-config', required : true)
@@ -17,5 +26,6 @@ srcs = [
 executable('nixco',
   srcs,
   dependencies : [libssh, fmt ],
+  include_directories: include_directories('include'),
   install : true
 )

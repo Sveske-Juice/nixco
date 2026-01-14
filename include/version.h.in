@@ -1,0 +1,7 @@
+#ifndef VERSION_H
+#define VERSION_H
+
+// Just dummy value for LSP, since meson configures this file
+#define PROJECT_VERSION "@PROJECT_VERSION@"
+
+#endif

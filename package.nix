@@ -1,6 +1,6 @@
 {pkgs ? import <nixpkgs> {}}: pkgs.stdenv.mkDerivation rec {
   pname = "nixco";
-  version = "1.0.0";
+  version = builtins.readFile ./VERSION;
 
   src = ./.;
 
