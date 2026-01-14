@@ -1,7 +1,10 @@
+#include <cstdio>
 #include <expected>
+#include <fmt/base.h>
 #include <fmt/format.h>
 #include <libssh/libssh.h>
 #include <iostream>
+#include <print>
 #include <sysexits.h>
 #include <fstream>
 #include <system_error>
@@ -9,6 +12,7 @@
 #include "include/strategy.h"
 #include "include/transport.h"
 #include "include/cli_parser.h"
+#include "version.h"
 
 std::string read_file(const std::string& path) {
     std::ifstream f(path, std::ios::binary);
@@ -26,6 +30,29 @@ std::string read_file(const std::string& path) {
 }
 
 void printUsage() {
+  const char* usage = R"(Usage: 
+  ./nixco -t <transport> [options]
+
+  Transports:
+    -t, --transport { ssh | serial }  Transport type
+
+  SSH Transport Options:
+    --host <host>         required
+    -u, --user <user>     required
+    -p, --port <port>     optional (default: 22)
+    -i, --identity <path> optional (private key to use)
+
+  Serial Transport Options:
+    TODO: impl
+
+  Strategy:
+    -s, --strategy { runcmds | erasereload } optional (default: runcmds)
+
+  General:
+    -h, --help            Show this help message
+    -v, --version         Show version)";
+
+  std::cout << usage << std::endl;
 }
 
 int main(int argc, char **argv) {
