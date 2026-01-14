@@ -43,6 +43,7 @@
             valgrind
             libssh
             just
+            gdb
           ];
 
           shellHook = ''

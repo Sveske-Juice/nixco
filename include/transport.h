@@ -4,7 +4,6 @@
 #include "config.h"
 #include <cstdint>
 #include <expected>
-#include <functional>
 #include <libssh/libssh.h>
 #include <optional>
 #include <string>
@@ -16,6 +15,7 @@ public:
   [[nodiscard]] virtual std::optional<std::string> init() = 0;
   [[nodiscard]] virtual std::optional<std::string> write(const std::string& msg) = 0;
   [[nodiscard]] virtual std::expected<std::string, int> read(const uint32_t count) = 0;
+  virtual bool is_open() const = 0;
 };
 
 
@@ -35,7 +35,7 @@ public:
   std::optional<std::string> connect() override;
   std::optional<std::string> write(const std::string& cmd) override;
   std::expected<std::string, int> read(const uint32_t count) override;
-  bool is_open() const;
+  bool is_open() const override;
 };
 
 int passphrase_callback(

@@ -28,45 +28,32 @@ std::string Strategy::strip_ansi(const std::string &s) const {
 }
 
 bool Strategy::looks_like_prompt(const std::string &buffer) const {
-    // Strip control sequences
     auto s = strip_ansi(buffer);
 
-    // Trim trailing whitespace and newlines
     while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' '))
         s.pop_back();
 
     if (s.empty())
         return false;
 
-    // Common prompt characters
     static const std::string prompt_chars = "$#>%";
-
     return !s.empty() && prompt_chars.find(s.back()) != std::string::npos;
 }
 
-std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport) const {
+  std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport) const {
+    std::string emptyEcho;
+    return wait_for_prompt(transport, emptyEcho);
+  }
+
+std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, std::string &cmd) const {
   std::string buf;
 
-  while (true) {
+  while (transport.is_open()) {
     auto chunk = transport.read(CHUNK);
 
     // Propagate error
     if (!chunk.has_value())
       return std::unexpected<int>(chunk.error());
-    
-    for (unsigned char c : chunk.value()) {
-      if (c >= 32 && c <= 126) {
-        std::cout << c;           // printable ASCII
-      } else if (c == '\n') {
-        std::cout << "\\n\n";     // newline
-      } else if (c == '\r') {
-        std::cout << "\\r";       // carriage return
-      } else {
-        std::cout << "\\x" 
-          << std::hex << (int)c 
-          << std::dec;     // other non-printable bytes
-      }
-    }
 
     buf += chunk.value();
 
@@ -76,9 +63,11 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport) 
     }
 
     if (looks_like_prompt(buf)) {
-      return buf;
+      break;
     }
   }
+
+  return buf;
 }
 
 std::optional<std::string> Strategy::apply(Transport &transport, const std::string &config) const {
@@ -87,21 +76,40 @@ std::optional<std::string> Strategy::apply(Transport &transport, const std::stri
   while (std::getline(stream, cmd)) {
     if (cmd.empty()) continue;
 
-    auto res = transport.write(cmd + '\n');
+    cmd += '\n';
+
+    auto res = transport.write(cmd);
     if (res.has_value()) {
       return res.value();
     }
 
     // Wait for execution
-    auto recvBuffer = wait_for_prompt(transport);
+    auto recvBuffer = wait_for_prompt(transport, cmd);
     if (!recvBuffer.has_value()) {
       return std::string("Failed to wait for prompt after writing command.");
     }
 
-    std::cout << recvBuffer.value() << std::endl;
+    std::cout << recvBuffer.value();
 
     // TODO: catch + handle error in command
   }
 
+  std::cout << std::endl;
+
   return std::nullopt;
 }
+
+
+void Strategy::strip_echo(std::string &buffer, std::string &echo) const {
+  // std::cout << "buffer: " << buffer << "\necho: " << echo << std::endl;
+  while (!buffer.empty() && !echo.empty()) {
+    if (buffer.front() == echo.front()) {
+      // std::cout << "Strippig: " << buffer.front() << std::endl;
+      buffer.erase(buffer.begin());
+      echo.erase(echo.begin());
+    } else {
+      break;
+    }
+  }
+}
+

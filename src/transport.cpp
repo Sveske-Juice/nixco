@@ -113,7 +113,6 @@ std::optional<std::string> SshTransport::connect() {
 }
 
 std::optional<std::string> SshTransport::write(const std::string& cmd) {
-  // std::cout << "Writing: " << cmd << std::endl;
   if (ssh_channel_write(this->channel, cmd.data(), cmd.size()) == SSH_ERROR)
     return std::string("Failed to write to SSH Channel: ") + ssh_get_error(this->session);
 
@@ -121,7 +120,6 @@ std::optional<std::string> SshTransport::write(const std::string& cmd) {
 }
 
 std::expected<std::string, int> SshTransport::read(const uint32_t count) {
-  std::cout << ssh_get_error(this->session) << std::endl;
   std::string out;
   out.resize(count, '\0');
 
@@ -187,25 +185,5 @@ ssh_key SshTransport::loadIdentity(const std::string& path) {
 }
 
 bool SshTransport::is_open() const {
-  return ssh_channel_is_open(this->channel);
+  return ssh_channel_is_open(this->channel) && !ssh_channel_is_eof(this->channel);
 }
-
-int passphrase_callback(
-    const char *prompt,
-    char *buf,
-    size_t len,
-    int echo,
-    int verify,
-    void *userdata
-) {
-  std::string pass;
-
-  std::cout << prompt << ": ";
-  std::getline(std::cin, pass);
-
-  // Skip newline
-  std::strncpy(buf, pass.c_str(), len - 1);
-  buf[len - 1] = '\0';
-  return SSH_OK;
-}
-

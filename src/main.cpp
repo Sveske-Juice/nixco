@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   if (!prompt.has_value())
     return -1;
 
-  std::string config = "terminal length 0\nshow version\nenable\ncisco\nshow vl br";
+  std::string config = "terminal length 0\nshow vlan brief\n";
   auto res = defaultStrategy.apply(transport, config);
   if (res.has_value()) {
     std::cerr << res.value() << std::endl;
