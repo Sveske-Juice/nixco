@@ -26,6 +26,8 @@ _: {
     "vlan20" = {
       shutdown = false;
       ipAddress = "dhcp";
+      ipv6LinkLocal = "fe80::1/64";
+      ipv6Addresses = [ "2026:20::1/64" ];
     };
     "g0/1-3" = {
       shutdown = false;

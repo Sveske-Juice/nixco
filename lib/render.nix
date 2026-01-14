@@ -30,6 +30,12 @@ let
     lib.optionalString (value.ipAddress != null && value.ipAddress == "dhcp") "ip address dhcp\n"
     +
     lib.optionalString (value.ipAddress != null && builtins.isAttrs value.ipAddress) "ip address ${value.ipAddress.address} ${value.ipAddress.subnetmask}\n"
+    +
+    lib.optionalString (value.ipv6LinkLocal != null) "ipv6 address ${value.ipv6LinkLocal} link-local\n"
+    +
+    builtins.concatStringsSep "" (builtins.map (addr:
+    "ipv6 address ${addr}\n"
+    ) value.ipv6Addresses)
   ;
   mkSubTitle = title: ''!==== ${title} ====!
   '';

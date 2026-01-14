@@ -41,6 +41,15 @@
           subnetmask = "255.255.255.224";
         };
       };
+      ipv6LinkLocal = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "fe80::1/64";
+      };
+      ipv6Addresses = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [];
+      };
     };
   });
   switchPortType = lib.types.submodule (_: {
