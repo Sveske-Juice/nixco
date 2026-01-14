@@ -63,6 +63,11 @@ int main(int argc, char **argv) {
     return EX_OK;
   }
 
+  if (cliparser.cmdOptionExists("-v") || cliparser.cmdOptionExists("--version")) {
+    std::cout << PROJECT_VERSION << std::endl;
+    return EX_OK;
+  }
+
   // Build Transport and Strategy from CLI Args
   auto transportPtr = Transport::create_from_cliargs(cliparser);
   if (!transportPtr) {
