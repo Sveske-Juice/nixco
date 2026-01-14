@@ -3,9 +3,20 @@ _: {
   iosVersion = "69.420.67";
 
   interfaces = {
-    "g0/1-3" = {
+    "vlan10" = {
       shutdown = false;
       description = "VLAN 10";
+      ipAddress = {
+        address = "10.10.10.100";
+        subnetmask = "255.255.255.0";
+      };
+    };
+    "vlan20" = {
+      shutdown = false;
+      ipAddress = "dhcp";
+    };
+    "g0/1-3" = {
+      shutdown = false;
     };
     "GigabitEthernet0/0" = {
       shutdown = false;

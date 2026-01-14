@@ -25,7 +25,11 @@ let
     +
     lib.optionalString (!value.shutdown) "no shutdown\n"
     +
-    renderSwitchport lib value
+    (if value.switchport != null then renderSwitchport lib value else "")
+    +
+    lib.optionalString (value.ipAddress != null && value.ipAddress == "dhcp") "ip address dhcp\n"
+    +
+    lib.optionalString (value.ipAddress != null && builtins.isAttrs value.ipAddress) "ip address ${value.ipAddress.address} ${value.ipAddress.subnetmask}\n"
   ;
   mkSubTitle = title: ''!==== ${title} ====!
   '';

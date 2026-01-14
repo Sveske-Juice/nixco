@@ -3,6 +3,18 @@
   config,
   ...
 }: let
+  ipAddrMaskType = lib.types.submodule (_: {
+    options = {
+      address = lib.mkOption {
+        type = lib.types.str;
+        example = "192.168.1.1";
+      };
+      subnetmask = lib.mkOption {
+        type = lib.types.str;
+        example = "255.255.255.0";
+      };
+    };
+  });
   interfaceDefault = import ./default-interface.nix config;
   interfaceType = lib.types.submodule (_: {
     options = {
@@ -18,8 +30,16 @@
         example = false;
       };
       switchport = lib.mkOption {
-        type = switchPortType;
+        type = lib.types.nullOr switchPortType;
         default = interfaceDefault.switchport;
+      };
+      ipAddress = lib.mkOption {
+        type = lib.types.nullOr (lib.types.either ipAddrMaskType (lib.types.enum [ "dhcp" ]));
+        default = null;
+        example = {
+          address = "192.168.1.1";
+          subnetmask = "255.255.255.224";
+        };
       };
     };
   });
