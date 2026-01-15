@@ -33,6 +33,26 @@
       };
     };
   });
+  channelGroupType = lib.types.submodule (_: {
+    options = {
+      groupNumber = lib.mkOption {
+        type = lib.types.int;
+        description = "Channel group number. Range: 1-48";
+        example = 1;
+      };
+      mode = lib.mkOption {
+        type = lib.types.enum [ "auto" "desirable" "active" "passive" "on" ];
+        description = ''
+          auto: PAgP mode. Becomes active if remote is desirable
+          desirable: PAgP mode. Becomes active if remote is auto or desirable
+          passive: LACP mode. Like auto
+          active: LACP mode. Like desirable
+          on: Static on. Only active if remote end is also set to "on"
+        '';
+        example = "on";
+      };
+    };
+  });
   ipAddrMaskType = lib.types.submodule (_: {
     options = {
       address = lib.mkOption {
@@ -50,18 +70,18 @@
     options = {
       description = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
-        default = interfaceDefault.description;
+        default = null;
         example = "Link to LAN1";
         description = "Description for this interface";
       };
       shutdown = lib.mkOption {
         type = lib.types.bool;
-        default = interfaceDefault.shutdown;
+        default = true;
         example = false;
       };
       switchport = lib.mkOption {
         type = lib.types.nullOr switchPortType;
-        default = interfaceDefault.switchport;
+        default = null;
       };
       ipAddress = lib.mkOption {
         type = lib.types.nullOr (lib.types.either ipAddrMaskType (lib.types.enum [ "dhcp" ]));
@@ -79,6 +99,11 @@
       ipv6Addresses = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [];
+      };
+      channelGroup = lib.mkOption {
+        type = lib.types.nullOr channelGroupType;
+        description = "Port-Channel/EtherChannel setup";
+        default = null;
       };
     };
   });

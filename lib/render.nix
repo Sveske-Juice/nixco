@@ -50,6 +50,8 @@ let
     builtins.concatStringsSep "" (builtins.map (addr:
     "ipv6 address ${addr}\n"
     ) value.ipv6Addresses)
+    +
+    lib.optionalString (value.channelGroup != null) "channel-group ${toString value.channelGroup.groupNumber} mode ${value.channelGroup.mode}\n"
   ;
   mkSubTitle = title: ''!==== ${title} ====!
   '';

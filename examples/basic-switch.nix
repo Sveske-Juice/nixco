@@ -41,6 +41,12 @@ _: {
         };
       };
     };
+    "g0/4-6" = {
+      channelGroup = {
+        groupNumber = 1;
+        mode = "on";
+      };
+    };
     "GigabitEthernet0/0" = {
       shutdown = false;
       description = "Link to LAN1";
@@ -52,6 +58,10 @@ _: {
           allowed = "5-1005";
         };
       };
+    };
+    "port-channel 1" = {
+      switchport.mode = "trunk";
+      switchport.trunk.allowed = "1,2,20";
     };
   };
 }
