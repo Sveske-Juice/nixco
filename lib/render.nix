@@ -12,6 +12,20 @@ let
       switchport trunk native vlan ${toString value.switchport.trunk.nativeVLAN}
       switchport trunk allowed vlan ${value.switchport.trunk.allowed}
       ''
+    +
+    lib.optionalString (value.switchport.portSecurity != null) (
+      ''
+      switchport port-security
+      switchport port-security maximum ${toString value.switchport.portSecurity.maximum}
+      switchport port-security violation ${value.switchport.portSecurity.violation}
+      ''
+      +
+      lib.optionalString ((builtins.length value.switchport.portSecurity.secureMacAddresses) != 0) (
+        builtins.concatStringsSep "\n" (map (addr: "switchport port-security mac-address ${addr}") value.switchport.portSecurity.secureMacAddresses))
+      +
+      lib.optionalString (value.switchport.portSecurity.stickyMac)
+        "switchport port-security mac-address sticky\n"
+    )
     ;
   renderInterface = lib: ifname: value:
     mkSubTitle "Interface ${ifname}"

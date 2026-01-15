@@ -3,6 +3,36 @@
   config,
   ...
 }: let
+  portSecurityType = lib.types.submodule (_: {
+    options = {
+      # TODO: pt doesnt support static, absolute/inactivity ?
+      aging = lib.mkOption {
+        type = lib.types.nullOr lib.types.int;
+        default = null;
+        description = "Aging settings in minutes. Disabled if null (default)";
+      };
+      secureMacAddresses = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [];
+      };
+      stickyMac = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        example = true;
+        description = "Whether to write learned MAC addresses to running-config";
+      };
+      maximum = lib.mkOption {
+        type = lib.types.int;
+        default = 1;
+        example = 6;
+        description = "The maximum number of different secure MAC addresses";
+      };
+      violation = lib.mkOption {
+        type = lib.types.enum [ "shutdown" "restrict" "protected" ];
+        default = "shutdown";
+      };
+    };
+  });
   ipAddrMaskType = lib.types.submodule (_: {
     options = {
       address = lib.mkOption {
@@ -98,8 +128,11 @@
         });
         default = {};
       };
+      portSecurity = lib.mkOption {
+        type = lib.types.nullOr portSecurityType;
+        default = null;
+      };
       # TODO:
-      # - port-security
       # - priority
       # - protected
       # - voice
@@ -114,27 +147,24 @@ in {
   };
 
   config.assertions = [
-    # {
-    #   assertion = !lib.lists.all (int: int.switchport.mode == "access" && int.switchport.negotiate) (builtins.attrValues config.interfaces);
-    #   message = ''
-    #     You must disable negotiation when using access switchport mode.
-    #   '';
-    # }
-    # {
-    #   assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
-    #   message = ''
-    #     Routers can not have switchport's
-    #   '';
-    # }
-    # {
-    #   assertion = lib.lists.all (int: builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces);
-    #   message = ''
-    #     The interface(s):
-    #     ${toString (builtins.filter (int: !builtins.elem int config.deviceSpec.interfaces) (builtins.attrNames config.interfaces))}
-    #     Does not exist on ${config.deviceSpec.name}
-    #     Make sure you have spelled the interface correctly as specified
-    #     in the device specification.
-    #   '';
-    # }
+    {
+      assertion = !lib.lists.all (int: int.switchport.mode == "access" && int.switchport.negotiate) (builtins.attrValues config.interfaces);
+      message = ''
+        You must disable negotiation when using access switchport mode.
+      '';
+    }
+    {
+      assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
+      message = ''
+        Routers can not have switchport's
+      '';
+    }
+    {
+      # TODO: impl
+      # assertion = lib.lists.all (int: int.switchport.portSecurity != null && int.switchport.mode != "access") (builtins.attrValues config.interfaces);
+      # message = ''
+      #   Port Security can only be configured on access switchports
+      # '';
+    }
   ];
 }

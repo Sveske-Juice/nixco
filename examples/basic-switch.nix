@@ -31,6 +31,15 @@ _: {
     };
     "g0/1-3" = {
       shutdown = false;
+      switchport = {
+        mode = "access";
+        portSecurity = {
+          aging = 30; # 30min
+          maximum = 3;
+          violation = "restrict";
+          stickyMac = true;
+        };
+      };
     };
     "GigabitEthernet0/0" = {
       shutdown = false;
