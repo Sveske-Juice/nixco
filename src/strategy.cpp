@@ -73,7 +73,7 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
   return buf;
 }
 
-std::optional<std::string> Strategy::apply(Transport &transport, const std::string &config) const {
+std::optional<std::string> Strategy::apply(Transport &transport, const std::string &config, const bool print) const {
   std::string cmd;
   std::istringstream stream(config);
   while (std::getline(stream, cmd)) {
@@ -92,12 +92,14 @@ std::optional<std::string> Strategy::apply(Transport &transport, const std::stri
       return std::string("Failed to wait for prompt after writing command.");
     }
 
-    std::cout << recvBuffer.value();
+    if (print)
+      std::cout << recvBuffer.value();
 
     // TODO: catch + handle error in command
   }
 
-  std::cout << std::endl;
+  if (print)
+    std::cout << std::endl;
 
   return std::nullopt;
 }

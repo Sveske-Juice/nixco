@@ -51,7 +51,8 @@ void printUsage() {
 
   General:
     -h, --help            Show this help message
-    -v, --version         Show version)";
+    -v, --version         Show version
+    -d, --debug           Show response while applying)";
 
   std::cout << usage << std::endl;
 }
@@ -115,11 +116,14 @@ int main(int argc, char **argv) {
   }
 
   // Run strategy
+  bool printing = cliparser.cmdOptionExists("-d") || cliparser.cmdOptionExists("--debug");
   spdlog::info("Applying {:s}...", cfgPath);
-  auto res = strategy.apply(transport, config);
+  auto res = strategy.apply(transport, config, printing);
   if (res) {
     spdlog::error(*res);
     return -1;
   }
+  spdlog::info("Done, no errors reported");
+
   return EX_OK;
 }

@@ -16,7 +16,7 @@ public:
   virtual ~Strategy() = default;
   std::expected<std::string, int> wait_for_prompt(Transport &transport) const;
   std::expected<std::string, int> wait_for_prompt(Transport &transport, std::string &echo) const;
-  virtual std::optional<std::string> apply(Transport &transport, const std::string &config) const;
+  virtual std::optional<std::string> apply(Transport &transport, const std::string &config, const bool print) const;
   static std::expected<std::unique_ptr<Strategy>, std::string> create_from_cliargs(const CliParser &cliparser);
 };
 
