@@ -21,12 +21,12 @@ let
       ''
       +
       lib.optionalString ((builtins.length value.switchport.portSecurity.secureMacAddresses) != 0) (
-        builtins.concatStringsSep "\n" (map (addr: "switchport port-security mac-address ${addr}") value.switchport.portSecurity.secureMacAddresses))
+        builtins.concatStringsSep "" (map (addr: "switchport port-security mac-address ${addr}\n") value.switchport.portSecurity.secureMacAddresses))
       +
       lib.optionalString (value.switchport.portSecurity.stickyMac)
         "switchport port-security mac-address sticky\n"
     )
-    ;
+  ;
   renderInterface = lib: ifname: value:
     mkSubTitle "Interface ${ifname}"
     +

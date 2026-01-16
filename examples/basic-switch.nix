@@ -34,10 +34,14 @@ _: {
       switchport = {
         mode = "access";
         portSecurity = {
-          aging = 30; # 30min
+          aging.time = 30; # 30min
           maximum = 3;
           violation = "restrict";
           stickyMac = true;
+          secureMacAddresses = [
+            "aaaa.bbbb.cccc"
+            "dddd.eeee.ffff"
+          ];
         };
       };
     };
@@ -50,6 +54,7 @@ _: {
     "g1/0/1-2,g1/0/23" = {
       shutdown = false;
       switchport = {
+        mode = "access";
         portSecurity = {
           aging = {
             time = 720;

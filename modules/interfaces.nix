@@ -5,7 +5,6 @@
 }: let
   portSecurityType = lib.types.submodule (_: {
     options = {
-      # TODO: pt doesnt support static, absolute/inactivity ?
       aging = lib.mkOption {
         type = lib.types.nullOr (lib.types.submodule (_: {
           options = {
@@ -200,12 +199,11 @@ in {
         Routers can not have switchport's
       '';
     }
-    # {
-      # TODO: impl
-      # assertion = lib.lists.all (int: int.switchport.portSecurity != null && int.switchport.mode != "access") (builtins.attrValues config.interfaces);
-      # message = ''
-      #   Port Security can only be configured on access switchports
-      # '';
-    # }
+    {
+      assertion = !lib.lists.any (int: int.switchport != null && int.switchport.portSecurity != null && int.switchport.mode != "access") (builtins.attrValues config.interfaces);
+      message = ''
+        Port Security can only be configured on access switchports
+      '';
+    }
   ];
 }
