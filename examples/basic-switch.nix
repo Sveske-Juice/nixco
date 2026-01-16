@@ -47,6 +47,18 @@ _: {
         mode = "on";
       };
     };
+    "g1/0/1-2,g1/0/23" = {
+      shutdown = false;
+      switchport = {
+        portSecurity = {
+          aging = {
+            time = 720;
+            static = true;
+            type = "absoulute";
+          };
+        };
+      };
+    };
     "GigabitEthernet0/0" = {
       shutdown = false;
       description = "Link to LAN1";

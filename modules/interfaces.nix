@@ -7,8 +7,24 @@
     options = {
       # TODO: pt doesnt support static, absolute/inactivity ?
       aging = lib.mkOption {
-        type = lib.types.nullOr lib.types.int;
-        default = null;
+        type = lib.types.nullOr (lib.types.submodule (_: {
+          options = {
+            time = lib.mkOption { 
+              type = lib.types.int;
+              default = 0;
+              description = "Aging disabled if 0";
+            };
+            static = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+            };
+            type = lib.mkOption {
+              type = lib.types.enum [ "absoulute" "inactivity" ];
+              default = "absoulute";
+            };
+          };
+        }));
+        default = null; # disabled
         description = "Aging settings in minutes. Disabled if null (default)";
       };
       secureMacAddresses = lib.mkOption {
@@ -184,12 +200,12 @@ in {
         Routers can not have switchport's
       '';
     }
-    {
+    # {
       # TODO: impl
       # assertion = lib.lists.all (int: int.switchport.portSecurity != null && int.switchport.mode != "access") (builtins.attrValues config.interfaces);
       # message = ''
       #   Port Security can only be configured on access switchports
       # '';
-    }
+    # }
   ];
 }
