@@ -18,16 +18,14 @@ _: {
     "vlan10" = {
       shutdown = false;
       description = "VLAN 10";
-      ipAddress = {
-        address = "10.10.10.100";
-        subnetmask = "255.255.255.0";
-      };
+      ip.address.address = "10.10.10.100";
+      ip.address.subnetmask = "255.255.255.0";
     };
     "vlan20" = {
       shutdown = false;
-      ipAddress = "dhcp";
-      ipv6LinkLocal = "fe80::1/64";
-      ipv6Addresses = [ "2026:20::1/64" ];
+      ip.address = "dhcp";
+      ipv6.linkLocal = "fe80::1/64";
+      ipv6.addresses = [ "2026:20::1/64" ];
     };
     "g0/1-3" = {
       shutdown = false;
@@ -43,6 +41,11 @@ _: {
             "dddd.eeee.ffff"
           ];
         };
+      };
+      ip.ipHelper = "10.10.10.1";
+      ipv6.dhcp.relay = {
+        destination = "2001:db8:acad::1::2";
+        interface = "g1/1/1";
       };
     };
     "g0/4-6" = {

@@ -3,6 +3,26 @@
   config,
   ...
 }: let
+  ipv6DHCPType = lib.types.submodule (_: {
+    options = {
+      relay = lib.mkOption {
+        type = lib.types.nullOr (lib.types.submodule (_: {
+          options = {
+            destination = lib.mkOption {
+              type = lib.types.str;
+              description = "Destination DHCPv6 Server to relay to";
+            };
+            interface = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              description = "Optional: The egress interface to get to the DHCPv6 server";
+            };
+          };
+        }));
+        default = null;
+      };
+    };
+  });
   portSecurityType = lib.types.submodule (_: {
     options = {
       aging = lib.mkOption {
@@ -98,27 +118,52 @@
         type = lib.types.nullOr switchPortType;
         default = null;
       };
-      ipAddress = lib.mkOption {
-        type = lib.types.nullOr (lib.types.either ipAddrMaskType (lib.types.enum [ "dhcp" ]));
-        default = null;
-        example = {
-          address = "192.168.1.1";
-          subnetmask = "255.255.255.224";
-        };
-      };
-      ipv6LinkLocal = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        example = "fe80::1/64";
-      };
-      ipv6Addresses = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [];
-      };
       channelGroup = lib.mkOption {
         type = lib.types.nullOr channelGroupType;
         description = "Port-Channel/EtherChannel setup";
         default = null;
+      };
+      ip = lib.mkOption {
+        type = lib.types.nullOr (lib.types.submodule (_: {
+          options = {
+            address = lib.mkOption {
+              type = lib.types.nullOr (lib.types.either ipAddrMaskType (lib.types.enum [ "dhcp" ]));
+              default = null;
+              example = {
+                address = "192.168.1.1";
+                subnetmask = "255.255.255.224";
+              };
+            };
+            ipHelper = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+            };
+          };
+        }));
+        default = null;
+        description = "IPv4 settings for this interface";
+      };
+      ipv6 = lib.mkOption {
+        type = lib.types.nullOr (lib.types.submodule (_: {
+          options = {
+            linkLocal = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              example = "fe80::1/64";
+              description = "LLA Address of this interface";
+            };
+            addresses = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [];
+            };
+            dhcp = lib.mkOption {
+              type = lib.types.nullOr ipv6DHCPType;
+              default = null;
+            };
+          };
+        }));
+        default = null;
+        description = "IPv6 settings for this interface";
       };
     };
   });
