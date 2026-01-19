@@ -41,6 +41,10 @@ in {
         then null
         else models."${config.device}";
     };
+    hostname = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      example = "SW1";
+    };
   };
 
   config.assertions = [

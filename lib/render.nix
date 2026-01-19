@@ -107,6 +107,18 @@ in {
   +
   lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
   +
+  mkTitle "Banners"
+  +
+  ''
+    banner motd #${device.banner.motd}#
+    banner login #${device.banner.login}#
+    banner config-save #${device.banner.configSave}#
+    banner exec #${device.banner.exec}#
+    banner incoming #${device.banner.incoming}#
+    banner prompt-timeout #${device.banner.promptTimeout}#
+    banner slip-ppp #${device.banner.slipPPP}#
+  ''
+  +
   mkTitle "VLANs"
   +
   (builtins.concatStringsSep "" (builtins.map (vlan:
