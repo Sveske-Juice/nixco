@@ -1,4 +1,8 @@
-{lib, nixcoLib, ...}: let
+{
+  lib,
+  nixcoLib,
+  ...
+}: let
   ipRouteType = lib.types.submodule (_: {
     options = {
       ipv6 = lib.mkEnableOption {
@@ -23,7 +27,7 @@
         description = "The Administrative Distance (AD) for this route. Static routes are by default 1";
         default = 1;
       };
-      # TODO: 
+      # TODO:
       # multicast
       # name
       # permanent
@@ -35,7 +39,7 @@ in {
   options = {
     routes = lib.mkOption {
       type = lib.types.listOf ipRouteType;
-      default = [ ];
+      default = [];
     };
   };
 }

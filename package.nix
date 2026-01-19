@@ -1,4 +1,5 @@
-{pkgs ? import <nixpkgs> {}}: pkgs.stdenv.mkDerivation rec {
+{pkgs ? import <nixpkgs> {}}:
+pkgs.stdenv.mkDerivation rec {
   pname = "nixco";
   version = builtins.readFile ./VERSION;
 

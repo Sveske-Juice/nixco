@@ -29,7 +29,7 @@
       aging = lib.mkOption {
         type = lib.types.nullOr (lib.types.submodule (_: {
           options = {
-            time = lib.mkOption { 
+            time = lib.mkOption {
               type = lib.types.int;
               default = 0;
               description = "Aging disabled if 0";
@@ -39,7 +39,7 @@
               default = false;
             };
             type = lib.mkOption {
-              type = lib.types.enum [ "absoulute" "inactivity" ];
+              type = lib.types.enum ["absoulute" "inactivity"];
               default = "absoulute";
             };
           };
@@ -64,7 +64,7 @@
         description = "The maximum number of different secure MAC addresses";
       };
       violation = lib.mkOption {
-        type = lib.types.enum [ "shutdown" "restrict" "protected" ];
+        type = lib.types.enum ["shutdown" "restrict" "protected"];
         default = "shutdown";
       };
     };
@@ -77,7 +77,7 @@
         example = 1;
       };
       mode = lib.mkOption {
-        type = lib.types.enum [ "auto" "desirable" "active" "passive" "on" ];
+        type = lib.types.enum ["auto" "desirable" "active" "passive" "on"];
         description = ''
           auto: PAgP mode. Becomes active if remote is desirable
           desirable: PAgP mode. Becomes active if remote is auto or desirable
@@ -115,7 +115,7 @@
         type = lib.types.nullOr (lib.types.submodule (_: {
           options = {
             address = lib.mkOption {
-              type = lib.types.nullOr (lib.types.either nixcoLib.types.ipAddrMaskType (lib.types.enum [ "dhcp" ]));
+              type = lib.types.nullOr (lib.types.either nixcoLib.types.ipAddrMaskType (lib.types.enum ["dhcp"]));
               default = null;
               example = {
                 address = "192.168.1.1";
@@ -165,7 +165,10 @@
           "trunk"
         ]);
         # Routers dont have switchports. Switches are default access
-        default = if config.deviceSpec.deviceType == "switch" then "dynamic auto" else null;
+        default =
+          if config.deviceSpec.deviceType == "switch"
+          then "dynamic auto"
+          else null;
       };
       negotiate = lib.mkOption {
         type = lib.types.bool;

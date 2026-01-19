@@ -16,11 +16,17 @@ _: {
 
   routes = [
     {
-      destination = { address = "10.10.1.0"; subnetmask = "255.255.255.0";};
+      destination = {
+        address = "10.10.1.0";
+        subnetmask = "255.255.255.0";
+      };
       nextHop = "192.168.1.2";
     }
     {
-      destination = { address = "10.10.2.0"; subnetmask = "255.255.255.0";};
+      destination = {
+        address = "10.10.2.0";
+        subnetmask = "255.255.255.0";
+      };
       nextHop = "192.168.2.2";
       exitInterface = "g1/0/1";
       distance = 5;
@@ -43,7 +49,7 @@ _: {
       shutdown = false;
       ip.address = "dhcp";
       ipv6.linkLocal = "fe80::1/64";
-      ipv6.addresses = [ "2026:20::1/64" ];
+      ipv6.addresses = ["2026:20::1/64"];
     };
     "g0/1-3" = {
       shutdown = false;
