@@ -13,7 +13,7 @@
 
   outputs = inputs @ {flake-parts, ...}:
     flake-parts.lib.mkFlake {inherit inputs;} (_: let
-      nixco-lib = import ./lib {inherit (inputs.nixpkgs) lib;};
+      nixcoLib = import ./lib {inherit (inputs.nixpkgs) lib;};
     in {
       imports = [
         ./treefmt.nix
@@ -24,8 +24,8 @@
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
 
       perSystem = {pkgs, ...}: let
-        deviceCfg = nixco-lib.evalDevice ./examples/basic-switch.nix;
-        rendered = nixco-lib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
+        deviceCfg = nixcoLib.evalDevice ./examples/basic-switch.nix;
+        rendered = nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
       in {
         packages.test = pkgs.writeText "test.cfg" rendered;
         packages.default = pkgs.callPackage ./package.nix {};
@@ -36,21 +36,17 @@
             clang
             pkg-config
             ninja
-            bear
             meson
             llvmPackages_latest.libstdcxxClang
             llvmPackages_latest.libcxx
             valgrind
-            libssh
             just
             gdb
+
+            libssh
             fmt
             spdlog
           ];
-
-          shellHook = ''
-            export PKG_CONFIG_PATH=${pkgs.libssh}/lib/pkgconfig:$PKG_CONFIG_PATH
-          '';
         };
       };
     });

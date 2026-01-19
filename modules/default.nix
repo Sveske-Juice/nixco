@@ -3,6 +3,7 @@
     ./assertions.nix
     ./device.nix
     ./interfaces.nix
+    ./routing.nix
     ./vlan.nix
   ];
   options = {

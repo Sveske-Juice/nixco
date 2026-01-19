@@ -1,5 +1,6 @@
 {
   lib,
+  nixcoLib,
   config,
   ...
 }: let
@@ -88,19 +89,6 @@
       };
     };
   });
-  ipAddrMaskType = lib.types.submodule (_: {
-    options = {
-      address = lib.mkOption {
-        type = lib.types.str;
-        example = "192.168.1.1";
-      };
-      subnetmask = lib.mkOption {
-        type = lib.types.str;
-        example = "255.255.255.0";
-      };
-    };
-  });
-  interfaceDefault = import ./default-interface.nix config;
   interfaceType = lib.types.submodule (_: {
     options = {
       description = lib.mkOption {
@@ -127,7 +115,7 @@
         type = lib.types.nullOr (lib.types.submodule (_: {
           options = {
             address = lib.mkOption {
-              type = lib.types.nullOr (lib.types.either ipAddrMaskType (lib.types.enum [ "dhcp" ]));
+              type = lib.types.nullOr (lib.types.either nixcoLib.types.ipAddrMaskType (lib.types.enum [ "dhcp" ]));
               default = null;
               example = {
                 address = "192.168.1.1";
@@ -177,16 +165,16 @@
           "trunk"
         ]);
         # Routers dont have switchports. Switches are default access
-        default = interfaceDefault.switchport.mode;
+        default = if config.deviceSpec.deviceType == "switch" then "dynamic auto" else null;
       };
       negotiate = lib.mkOption {
         type = lib.types.bool;
-        default = interfaceDefault.switchport.negotiate;
+        default = true;
         description = "Enable Cisco Dynamic Trunking Protocol (DTP)";
       };
       vlan = lib.mkOption {
         type = lib.types.int;
-        default = interfaceDefault.switchport.vlan;
+        default = 1;
         description = ''
           The VLAN ID of the VLAN when this port is in access mode.
         '';
@@ -196,14 +184,14 @@
           options = {
             nativeVLAN = lib.mkOption {
               type = lib.types.int;
-              default = interfaceDefault.switchport.trunk.nativeVLAN;
+              default = 1;
               description = ''
-                native VLAN when interface is in trunking mode.
+                native VLAN when interface is in trunking mode (default: 1).
               '';
             };
             allowed = lib.mkOption {
               type = lib.types.str;
-              default = interfaceDefault.switchport.trunk.allowed;
+              default = "1-1005";
               description = ''
                 VLANs allowed on this trunk interface. Can be a single VLAN "x"
                 or a list of ranges: "a-b[, c-d, ...]", fx: 1-6, 99-200
