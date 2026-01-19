@@ -14,6 +14,24 @@ _: {
     }
   ];
 
+  routes = [
+    {
+      destination = { address = "10.10.1.0"; subnetmask = "255.255.255.0";};
+      nextHop = "192.168.1.2";
+    }
+    {
+      destination = { address = "10.10.2.0"; subnetmask = "255.255.255.0";};
+      nextHop = "192.168.2.2";
+      exitInterface = "g1/0/1";
+      distance = 5;
+    }
+    {
+      ipv6 = true;
+      destination = "2001:db8:a::1/64";
+      nextHop = "2001:db8:1::1";
+    }
+  ];
+
   interfaces = {
     "vlan10" = {
       shutdown = false;

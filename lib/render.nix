@@ -1,4 +1,19 @@
 let
+  renderRoute = lib: route:
+    (if route.ipv6 then "ipv6 " else "ip ")
+    +
+    "route "
+    +
+    (if route.ipv6 then route.destination else "${route.destination.address} ${route.destination.subnetmask}")
+    +
+    " "
+    +
+    (lib.optionalString (route.exitInterface != null) "${route.exitInterface} ")
+    +
+    (lib.optionalString (route.nextHop != null) "${route.nextHop} ")
+    +
+    (toString route.distance)
+    ;
   renderSwitchport = lib: value: ''
     switchport mode ${value.switchport.mode}
   '' +
@@ -113,5 +128,13 @@ in {
   lib.concatMapAttrsStringSep "\n" (ifname: value:
       renderInterface lib ifname value
     ) device.interfaces
+  +
+  mkTitle "Routing"
+  +
+  mkSubTitle "Static Routes"
+  +
+  builtins.concatStringsSep "\n" (builtins.map (route: 
+    renderRoute lib route
+  ) device.routes)
   ;
 }
