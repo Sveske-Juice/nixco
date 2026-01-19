@@ -50,6 +50,7 @@ void printUsage() {
     -s, --strategy { runcmds | erasereload } optional (default: runcmds)
 
   General:
+    -f, --file            The configuration file to apply
     -h, --help            Show this help message
     -v, --version         Show version
     -d, --debug           Show response while applying)";

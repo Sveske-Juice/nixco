@@ -4,6 +4,12 @@
 #include <cstdint>
 #include <libssh/libssh.h>
 #include <string>
+#include <termios.h>
+
+struct SerialConfig {
+  std::string portname;
+  speed_t speed = B9600;
+};
 
 struct SshConfig {
   std::string host;

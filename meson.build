@@ -19,7 +19,8 @@ spdlog = dependency('spdlog', method: 'pkg-config', required : true)
 
 srcs = [
   'src/main.cpp',
-  'src/transport.cpp',
+  'src/sshtransport.cpp',
+  'src/serialtransport.cpp',
   'src/strategy.cpp',
   'src/cli_parser.cpp',
 ]

@@ -215,7 +215,13 @@ std::expected<std::unique_ptr<Transport>, std::string> Transport::create_from_cl
     return std::make_unique<SshTransport>(config);
   }
   else if (transportType == "serial") {
-    throw std::runtime_error("not impl");
+    SerialConfig config;
+    auto portname = cliparser.getCmdOption("--port");
+    if (!portname) return std::unexpected<std::string>("Expected a port for serial transport");
+
+    config.portname = *portname;
+
+    return std::make_unique<SerialTransport>(config);
   }
 
   return std::unexpected<std::string>(fmt::format("Unrecognized transport type: {:s}", transportType));

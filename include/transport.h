@@ -21,7 +21,6 @@ public:
   static std::expected<std::unique_ptr<Transport>, std::string> create_from_cliargs(const CliParser &cliparser);
 };
 
-
 class SshTransport : public Transport {
 private:
   const SshConfig config;
@@ -41,14 +40,20 @@ public:
   bool is_open() const override;
 };
 
-int passphrase_callback(
-    const char *prompt,
-    char *buf,
-    size_t len,
-    int echo,
-    int verify,
-    void *userdata
-);
+class SerialTransport : public Transport {
+private:
+  const SerialConfig config;
+  int fd;
 
+public:
+  explicit SerialTransport(SerialConfig _config);
+  ~SerialTransport();
+
+  std::optional<std::string> init() override;
+  std::optional<std::string> connect() override;
+  std::optional<std::string> write(const std::string& cmd) override;
+  std::expected<std::string, int> read(const uint32_t count) override;
+  bool is_open() const override;
+};
 
 #endif
