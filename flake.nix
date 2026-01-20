@@ -24,7 +24,7 @@
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
 
       perSystem = {pkgs, ...}: let
-        deviceCfg = nixcoLib.evalDevice ./examples/basic-switch.nix;
+        deviceCfg = nixcoLib.evalDevice ./examples/access-switch.nix;
         rendered = nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
       in {
         packages.test = pkgs.writeText "test.cfg" rendered;
