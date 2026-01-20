@@ -1,4 +1,4 @@
-{lib, nixcoLib, ...}: let
+{lib, ...}: let
   vlans = {
     "LAN10" = 10;
     "LAN20" = 10;
@@ -17,7 +17,12 @@ in {
       Banner
     '';
 
-    vlans = lib.attrsets.mapAttrsToList (key: value: { name = key; id = value; }) vlans;
+    vlans =
+      lib.attrsets.mapAttrsToList (key: value: {
+        name = key;
+        id = value;
+      })
+      vlans;
 
     interfaces = {
       "g1/0/1-24,g1/1/1-4" = {

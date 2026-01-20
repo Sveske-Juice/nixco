@@ -86,7 +86,7 @@ _: {
           aging = {
             time = 720;
             static = true;
-            type = "absoulute";
+            type = "absolute";
           };
         };
       };
