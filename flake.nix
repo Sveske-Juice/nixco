@@ -24,11 +24,19 @@
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
 
       perSystem = {pkgs, ...}: let
-        deviceCfg = nixcoLib.evalDevice ./examples/access-switch.nix;
-        rendered = nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
+        examples = inputs.nixpkgs.lib.fileset.toList (inputs.nixpkgs.lib.fileset.fileFilter (file: file.hasExt "nix") ./examples);
+        renderExamples = builtins.trace examples (builtins.listToAttrs (map (file: let
+            exampleName = inputs.nixpkgs.lib.strings.replaceString ".nix" "" (builtins.baseNameOf file);
+            deviceCfg = nixcoLib.evalDevice file;
+            rendered = nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} deviceCfg.config;
+          in {
+            name = exampleName;
+            value = pkgs.writeText exampleName rendered;
+          })
+          examples));
       in {
-        packages.test = pkgs.writeText "test.cfg" rendered;
         packages.default = pkgs.callPackage ./package.nix {};
+        checks = renderExamples;
 
         devShells.default = pkgs.mkShellNoCC {
           packages = with pkgs; [
