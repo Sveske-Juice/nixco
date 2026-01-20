@@ -220,21 +220,31 @@ in {
     };
   };
 
-  config.assertions = [
+  config.assertions = let
+    forAllInterfaces = pred: lib.lists.all (int: pred int) (builtins.attrValues config.interfaces);
+  in [
     {
-      assertion = !lib.lists.all (int: int.switchport.mode == "access" && int.switchport.negotiate) (builtins.attrValues config.interfaces);
+      assertion = forAllInterfaces (int:
+        if int.switchport == null then true
+        else if int.switchport.mode == "access" && int.switchport.negotiate then false
+        else true);
       message = ''
         You must disable negotiation when using access switchport mode.
       '';
     }
     {
-      assertion = !lib.lists.all (int: config.deviceSpec.deviceType == "router" && int.switchport.mode != null) (builtins.attrValues config.interfaces);
+      assertion = forAllInterfaces (int:
+        if config.deviceSpec.deviceType != "router" then true
+        else int.switchport != null);
       message = ''
         Routers can not have switchport's
       '';
     }
     {
-      assertion = !lib.lists.any (int: int.switchport != null && int.switchport.portSecurity != null && int.switchport.mode != "access") (builtins.attrValues config.interfaces);
+      assertion = forAllInterfaces (int:
+        if int.switchport == null then true
+        else if int.switchport.portSecurity == null then true
+        else int.switchport.mode == "access");
       message = ''
         Port Security can only be configured on access switchports
       '';

@@ -19,6 +19,21 @@
         ./treefmt.nix
       ];
       flake = {
+        # Expose nixcoLib from flake
+        inherit nixcoLib;
+
+        templates = {
+          default = {
+            path = ./templates/single-device;
+            description = "Nixco single device template";
+            welcomeText = ''
+              This template contains a flake.nix which contains
+              a default package output, which when built, renders
+              your device's config (device.nix):
+              $ nix build .#
+            '';
+          };
+        };
       };
 
       systems = inputs.nixpkgs.lib.systems.flakeExposed;

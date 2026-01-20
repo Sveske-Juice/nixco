@@ -47,6 +47,7 @@ in {
         description = "Access ports";
         switchport = {
           mode = "access";
+          negotiate = false;
           portSecurity = {
             aging.time = 720;
             aging.type = "absolute";

@@ -55,6 +55,7 @@ _: {
       shutdown = false;
       switchport = {
         mode = "access";
+        negotiate = false;
         portSecurity = {
           aging.time = 30; # 30min
           maximum = 3;
@@ -82,6 +83,7 @@ _: {
       shutdown = false;
       switchport = {
         mode = "access";
+        negotiate = false;
         portSecurity = {
           aging = {
             time = 720;
