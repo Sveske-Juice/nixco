@@ -31,16 +31,14 @@
           options = {
             time = lib.mkOption {
               type = lib.types.int;
-              default = 0;
-              description = "Aging disabled if 0";
             };
             static = lib.mkOption {
               type = lib.types.bool;
               default = false;
             };
             type = lib.mkOption {
-              type = lib.types.enum ["absoulute" "inactivity"];
-              default = "absoulute";
+              type = lib.types.enum ["absolute" "inactivity"];
+              default = "absolute";
             };
           };
         }));
