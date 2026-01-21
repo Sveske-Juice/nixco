@@ -105,8 +105,6 @@
   in
     ''
       ! Config: ${builtins.toJSON device}
-
-      configure terminal
     ''
     + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + mkTitle "Banners"

@@ -182,7 +182,7 @@ std::expected<ssh_key, std::string> SshTransport::loadIdentity(const std::string
   return key;
 }
 
-bool SshTransport::is_open() const {
+bool SshTransport::is_open() {
   return ssh_channel_is_open(this->channel) && !ssh_channel_is_eof(this->channel);
 }
 

@@ -109,11 +109,11 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  // Wait for prompt
-  auto prompt = strategy.wait_for_prompt(transport);
-  if (!prompt) {
-    spdlog::error("Failed to get first PTY prompt from remote. rc = {:d}", prompt.error());
-    return prompt.error();
+  // Wait for prompt initial prompt
+  err = transport.write("\n");
+  if (err) {
+    spdlog::error(*err);
+    return -1;
   }
 
   // Run strategy

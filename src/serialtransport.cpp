@@ -35,27 +35,11 @@ std::optional<std::string> SerialTransport::connect() {
     return fmt::format("Error from tcgetattr: {:s}", strerror(errno));
   }
 
+  cfmakeraw(&tty);
   cfsetospeed(&tty, this->config.speed);
   cfsetispeed(&tty, this->config.speed);
 
-  tty.c_cflag
-    = (tty.c_cflag & ~CSIZE) | CS8; // 8-bit characters
-  tty.c_iflag &= ~IGNBRK; // disable break processing
-  tty.c_lflag = 0; // no signaling chars, no echo, no
-                   // canonical processing
-  tty.c_oflag = 0; // no remapping, no delays
-  tty.c_cc[VMIN] = 0; // read doesn't block
-  tty.c_cc[VTIME] = 5; // 0.5 seconds read timeout
-
-  tty.c_iflag &= ~(IXON | IXOFF
-      | IXANY); // shut off xon/xoff ctrl
-
-  tty.c_cflag
-    |= (CLOCAL | CREAD); // ignore modem controls,
-                         // enable reading
-  tty.c_cflag &= ~(PARENB | PARODD); // shut off parity
-  tty.c_cflag &= ~CSTOPB;
-  tty.c_cflag &= ~CRTSCTS;
+  tty.c_cflag |= (CLOCAL | CREAD);
 
   if (tcsetattr(fd, TCSANOW, &tty) != 0) {
     return fmt::format("Error from tcsetattr: {:s}", strerror(errno));
@@ -74,13 +58,32 @@ SerialTransport::~SerialTransport() {
 }
 
 std::optional<std::string> SerialTransport::write(const std::string& cmd) {
+  int written = ::write(this->fd, static_cast<const void *>(cmd.data()), cmd.size());
+  if (written < 0)
+    return fmt::format("Error writing to transport: {:s}", strerror(errno));
+
   return std::nullopt;
 }
 
 std::expected<std::string, int> SerialTransport::read(const uint32_t count) {
-  return "serial";
+  std::string out;
+  out.resize(count, '\0');
+  int read = ::read(this->fd, static_cast<void *>(out.data()), static_cast<size_t>(count));
+
+  if (read == 0)
+    return "";
+  
+  if (read < 0) {
+    return std::unexpected<int>(errno);
+  }
+
+  out.resize(read);
+  return out;
 }
 
-bool SerialTransport::is_open() const {
+bool SerialTransport::is_open() {
+  // We must wake the device to know, otherwise we dont know
+  // this->write("\n");
+
   return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
 }

@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <regex>
+#include <fmt/format.h>
 
 #include "include/strategy.h"
 #include "include/transport.h"
@@ -30,7 +31,7 @@ std::string Strategy::strip_ansi(const std::string &s) const {
   return res;
 }
 
-bool Strategy::looks_like_prompt(const std::string &buffer) const {
+bool Strategy::looks_like_prompt(const std::string &buffer, const std::string &prompt) const {
   auto s = strip_ansi(buffer);
 
   while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' '))
@@ -39,16 +40,15 @@ bool Strategy::looks_like_prompt(const std::string &buffer) const {
   if (s.empty())
     return false;
 
-  static const std::string prompt_chars = "$#>%";
-  return !s.empty() && prompt_chars.find(s.back()) != std::string::npos;
+  if (prompt.empty()) {
+    static const std::string prompt_chars = "#>";
+    return prompt_chars.find(s.back()) != std::string::npos;
+  }
+
+  return s.contains(prompt);
 }
 
-std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport) const {
-  std::string emptyEcho;
-  return wait_for_prompt(transport, emptyEcho);
-}
-
-std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, std::string &cmd) const {
+std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, const std::string &prompt) const {
   std::string buf;
 
   while (transport.is_open()) {
@@ -65,7 +65,7 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
       return std::unexpected<int>(-1);
     }
 
-    if (looks_like_prompt(buf)) {
+    if (looks_like_prompt(buf, prompt)) {
       break;
     }
   }
@@ -76,6 +76,13 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
 std::optional<std::string> Strategy::apply(Transport &transport, const std::string &config, const bool print) const {
   std::string cmd;
   std::istringstream stream(config);
+
+  // Get into global configuration mode
+  auto err = get_to_global_config_mode(transport);
+  if (err) return err;
+
+  spdlog::info("Success! We are in global config mode");
+
   while (std::getline(stream, cmd)) {
     if (cmd.empty()) continue;
 
@@ -87,7 +94,7 @@ std::optional<std::string> Strategy::apply(Transport &transport, const std::stri
     }
 
     // Wait for execution
-    auto recvBuffer = wait_for_prompt(transport, cmd);
+    auto recvBuffer = wait_for_prompt(transport, "#");
     if (!recvBuffer.has_value()) {
       return std::string("Failed to wait for prompt after writing command.");
     }
@@ -118,4 +125,54 @@ std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_clia
   }
 
   return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
+}
+
+std::optional<std::string> Strategy::get_to_global_config_mode(Transport &transport) const {
+  auto err = transport.write("\n\n\n");
+  if (err) return err;
+
+  spdlog::info("Trying to enter Global Configuration Mode");
+  auto initialState = wait_for_prompt(transport, "");
+  if (!initialState) return *initialState;
+
+  spdlog::info("RX: {}",
+    [&]{
+        std::string s;
+        for (unsigned char c : *initialState)
+            fmt::format_to(std::back_inserter(s), "{:02X} ", c);
+        return s;
+    }()
+  );
+
+
+  // What should we do from initial state to get to global configuration mode?
+  if (looks_like_prompt(*initialState, ">")) { // Starting from User EXEC
+    spdlog::info("Elevating from User Exec Mode");
+    auto err = transport.write("enable\n");
+    if (err) return err;
+
+    auto pexState = wait_for_prompt(transport, "#");
+    if (!pexState) return *pexState;
+
+    // Goto global config
+    err = transport.write("config terminal\n");
+    if (err) return err;
+
+    auto endState = wait_for_prompt(transport, "(config)#");
+    if (!endState) return *endState;
+  }
+  else if (looks_like_prompt(*initialState, "#")) { // Starting from Privelege EXEC
+    err = transport.write("config terminal\n");
+    if (err) return err;
+
+    auto endState = wait_for_prompt(transport, "(config)#");
+    if (!endState) return *endState;
+  }
+  else if (looks_like_prompt(*initialState, "(config)#")) { // Could already be in global config
+  }
+  else {
+    return fmt::format("Unkown inital state. Dont know how to get to global config from:\n {:s}", *initialState);
+  }
+
+  return std::nullopt;
 }
