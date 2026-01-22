@@ -103,10 +103,7 @@
         ! +----------------------------+
       '';
   in
-    ''
-      ! Config: ${builtins.toJSON device}
-    ''
-    + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
+    lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + mkTitle "Banners"
     + ''
       banner motd #${device.banner.motd}#

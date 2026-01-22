@@ -11,7 +11,7 @@
 in {
   config = {
     device = "C9200L-24P-4G";
-    hostname = "bruh";
+    hostname = "ASW";
     banner.motd = ''
       Multiline
       Banner

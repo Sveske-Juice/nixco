@@ -9,7 +9,6 @@
 #include <memory>
 #include <optional>
 #include <spdlog/spdlog.h>
-#include <stdexcept>
 #include <string>
 #include <fmt/format.h>
 
