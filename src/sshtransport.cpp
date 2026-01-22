@@ -72,7 +72,7 @@ std::optional<std::string> SshTransport::connect() {
   else {
     // Try keys on host
     int rc = ssh_userauth_publickey_auto(session, nullptr, nullptr);
-    if (rc == SSH_AUTH_DENIED) {
+    if (rc != SSH_AUTH_SUCCESS) {
       spdlog::info("Public key not accepted. Trying password auth");
 
       // Try password
@@ -84,9 +84,6 @@ std::optional<std::string> SshTransport::connect() {
       if (ssh_userauth_password(this->session, NULL, input.c_str()) == SSH_AUTH_ERROR) {
         return fmt::format("password auth failed: ", ssh_get_error(this->session));
       }
-    }
-    else if (rc != SSH_AUTH_SUCCESS) {
-      return fmt::format("auth failed: {:s}", ssh_get_error(this->session));
     }
   }
 
