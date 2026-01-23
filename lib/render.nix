@@ -104,10 +104,8 @@
       '';
   in
     mkSubTitle "Pre config"
-    +
-    device.extraPreConfig
-    +
-    lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
+    + device.extraPreConfig
+    + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + mkTitle "Banners"
     + ''
       banner motd #${device.banner.motd}#
@@ -143,13 +141,10 @@
           renderRoute lib route
       )
       device.routes)
-    +
+    + ''
+      end
+      configure terminal
     ''
-    end
-    configure terminal
-    ''
-    +
-    mkSubTitle "Post Config"
-    +
-    device.extraPostConfig;
+    + mkSubTitle "Post Config"
+    + device.extraPostConfig;
 }

@@ -11,10 +11,14 @@
     nixco.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs @ {flake-parts, nixco, ...}:
+  outputs = inputs @ {
+    flake-parts,
+    nixco,
+    ...
+  }:
     flake-parts.lib.mkFlake {inherit inputs;} (_: let
       config = nixco.nixcoLib.evalDevice ./device.nix;
-      rendered =  nixco.nixcoLib.renderConfig.render { inherit (inputs.nixpkgs) lib; } config.config;
+      rendered = nixco.nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} config.config;
     in {
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
       perSystem = {pkgs, ...}: {

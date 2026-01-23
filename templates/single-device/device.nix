@@ -1,4 +1,4 @@
-{lib, nixcoLib, ...}: {
+_: {
   config = {
     deviceSpec = {
       name = "My custom device";

@@ -40,13 +40,13 @@
 
       perSystem = {pkgs, ...}: let
         examples = inputs.nixpkgs.lib.fileset.toList (inputs.nixpkgs.lib.fileset.fileFilter (file: file.hasExt "nix") ./examples);
-        devicesFromFile = file: (nixcoLib.evalFile file).config.devices;
-        allDevices = inputs.nixpkgs.lib.foldl' inputs.nixpkgs.lib.recursiveUpdate {} (map devicesFromFile examples);
-        renderAll = builtins.mapAttrs (deviceName: value:
-          pkgs.writeText "test" (nixcoLib.renderConfig.render { inherit (inputs.nixpkgs) lib; } value)) allDevices;
+        allDevices = nixcoLib.eval examples;
+        renderAll = builtins.mapAttrs (_deviceName: value:
+          pkgs.writeText "test" (nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} value))
+        allDevices.config.devices;
       in {
         packages.default = pkgs.callPackage ./package.nix {};
-        checks = builtins.trace renderAll renderAll;
+        checks = builtins.trace allDevices.config renderAll;
 
         devShells.default = pkgs.mkShellNoCC {
           packages = with pkgs; [

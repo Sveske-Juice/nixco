@@ -1,8 +1,5 @@
-{
-  lib,
-  nixcoLib,
-  ...
-}: let
+{lib, ...}: let
+  types = import ../lib/types.nix {inherit lib;};
   ipRouteType = lib.types.submodule (_: {
     options = {
       ipv6 = lib.mkEnableOption {
@@ -10,7 +7,7 @@
         description = "Whether this is a ipv6 or ipv4 route";
       };
       destination = lib.mkOption {
-        type = lib.types.either nixcoLib.types.ipAddrMaskType lib.types.str; # ipv4 (addr + mask) | ipv6 (addr + prefix)
+        type = lib.types.either types.ipAddrMaskType lib.types.str; # ipv4 (addr + mask) | ipv6 (addr + prefix)
       };
       nextHop = lib.mkOption {
         type = lib.types.nullOr lib.types.str;

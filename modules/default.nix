@@ -31,6 +31,8 @@
     };
   });
 in {
+  imports = [
+  ];
   options = {
     devices = lib.mkOption {
       type = lib.types.attrsOf deviceType;

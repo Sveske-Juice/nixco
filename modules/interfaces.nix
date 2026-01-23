@@ -1,9 +1,9 @@
 {
   lib,
-  nixcoLib,
   config,
   ...
 }: let
+  types = import ../lib/types.nix {inherit lib;};
   ipv6DHCPType = lib.types.submodule (_: {
     options = {
       relay = lib.mkOption {
@@ -113,7 +113,7 @@
         type = lib.types.nullOr (lib.types.submodule (_: {
           options = {
             address = lib.mkOption {
-              type = lib.types.nullOr (lib.types.either nixcoLib.types.ipAddrMaskType (lib.types.enum ["dhcp"]));
+              type = lib.types.nullOr (lib.types.either types.ipAddrMaskType (lib.types.enum ["dhcp"]));
               default = null;
               example = {
                 address = "192.168.1.1";
@@ -221,12 +221,14 @@ in {
   };
 
   config.assertions = let
-    forAllInterfaces = pred: lib.lists.all (int: pred int) (builtins.attrValues config.interfaces);
+    forAllInterfaces = pred: lib.lists.all pred (builtins.attrValues config.interfaces);
   in [
     {
       assertion = forAllInterfaces (int:
-        if int.switchport == null then true
-        else if int.switchport.mode == "access" && int.switchport.negotiate then false
+        if int.switchport == null
+        then true
+        else if int.switchport.mode == "access" && int.switchport.negotiate
+        then false
         else true);
       message = ''
         You must disable negotiation when using access switchport mode.
@@ -234,7 +236,8 @@ in {
     }
     {
       assertion = forAllInterfaces (int:
-        if config.deviceSpec.deviceType != "router" then true
+        if config.deviceSpec.deviceType != "router"
+        then true
         else int.switchport != null);
       message = ''
         Routers can not have switchport's
@@ -242,8 +245,10 @@ in {
     }
     {
       assertion = forAllInterfaces (int:
-        if int.switchport == null then true
-        else if int.switchport.portSecurity == null then true
+        if int.switchport == null
+        then true
+        else if int.switchport.portSecurity == null
+        then true
         else int.switchport.mode == "access");
       message = ''
         Port Security can only be configured on access switchports

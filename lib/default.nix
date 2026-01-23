@@ -1,35 +1,30 @@
 {lib}: let
   # Exposed nixcoLib types, functions etc.
   nixcoLib = {
-    # nixcoLib global types
-    types = {
-      ipAddrMaskType = lib.types.submodule (_: {
-        options = {
-          address = lib.mkOption {
-            type = lib.types.str;
-            example = "192.168.1.1";
-          };
-          subnetmask = lib.mkOption {
-            type = lib.types.str;
-            example = "255.255.255.0";
-          };
-        };
-      });
-    };
+    types = import ./types.nix lib;
 
     # nixcoLib global functions
   };
 in {
-  evalFile = file: let
+  eval = files: let
     result = lib.evalModules {
-      modules = [../modules file];
+      modules = [../modules] ++ files;
       specialArgs = {
         inherit lib;
         inherit nixcoLib;
       };
     };
 
-    failedAssertions = [];#builtins.filter (a: !a.assertion) result.config.assertions;
+    # Collect all device-level assertions
+    allDeviceAssertions = builtins.concatLists (
+      map (
+        deviceName: let
+          deviceConfig = result.config.devices.${deviceName};
+        in
+          deviceConfig.assertions
+      ) (builtins.attrNames result.config.devices)
+    );
+    failedAssertions = builtins.filter (a: !a.assertion) allDeviceAssertions;
   in
     if failedAssertions == []
     then result

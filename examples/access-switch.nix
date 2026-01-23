@@ -14,8 +14,8 @@ in {
       device = "C9200L-24P-4G";
       hostname = "ASW";
       banner.motd = ''
-      Multiline
-      Banner
+        Multiline
+        Banner
       '';
 
       vlans =
