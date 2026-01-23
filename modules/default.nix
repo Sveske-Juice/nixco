@@ -1,31 +1,40 @@
-{lib, ...}: {
-  imports = [
-    ./assertions.nix
-    ./banner.nix
-    ./device.nix
-    ./interfaces.nix
-    ./routing.nix
-    ./vlan.nix
-  ];
+{lib, ...}: let
+  deviceType = lib.types.submodule (_: {
+    imports = [
+      ./banner.nix
+      ./device.nix
+      ./interfaces.nix
+      ./routing.nix
+      ./vlan.nix
+      ./assertions.nix
+    ];
+    options = {
+      extraPreConfig = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        description = "Extra configuration prepended before the main config";
+      };
+      extraPostConfig = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        description = "Exstra configuration appended at end of configuration";
+      };
+      comments = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Whether to include nice to have comments in rendered config";
+      };
+      iosVersion = lib.mkOption {
+        type = lib.types.str;
+        default = "0.0.0";
+      };
+    };
+  });
+in {
   options = {
-    extraPreConfig = lib.mkOption {
-      type = lib.types.lines;
-      default = "";
-      description = "Extra configuration prepended before the main config";
-    };
-    extraPostConfig = lib.mkOption {
-      type = lib.types.lines;
-      default = "";
-      description = "Exstra configuration appended at end of configuration";
-    };
-    comments = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Whether to include nice to have comments in rendered config";
-    };
-    iosVersion = lib.mkOption {
-      type = lib.types.str;
-      default = "0.0.0";
+    devices = lib.mkOption {
+      type = lib.types.attrsOf deviceType;
+      default = {};
     };
   };
 }

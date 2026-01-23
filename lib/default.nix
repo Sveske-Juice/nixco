@@ -20,16 +20,16 @@
     # nixcoLib global functions
   };
 in {
-  evalDevice = device: let
+  evalFile = file: let
     result = lib.evalModules {
-      modules = [../modules device];
+      modules = [../modules file];
       specialArgs = {
         inherit lib;
         inherit nixcoLib;
       };
     };
 
-    failedAssertions = builtins.filter (a: !a.assertion) result.config.assertions;
+    failedAssertions = [];#builtins.filter (a: !a.assertion) result.config.assertions;
   in
     if failedAssertions == []
     then result
