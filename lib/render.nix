@@ -103,6 +103,10 @@
         ! +----------------------------+
       '';
   in
+    mkSubTitle "Pre config"
+    +
+    device.extraPreConfig
+    +
     lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + mkTitle "Banners"
     + ''
@@ -138,5 +142,14 @@
         route:
           renderRoute lib route
       )
-      device.routes);
+      device.routes)
+    +
+    ''
+    end
+    configure terminal
+    ''
+    +
+    mkSubTitle "Post Config"
+    +
+    device.extraPostConfig;
 }
