@@ -46,11 +46,18 @@ void printUsage() {
   Serial Transport Options:
     TODO: impl
 
+  runcmds Strategy Options:
+    TODO: --write
+
+  tclreload Stragety Options:
+    --replace             optional. Will replace the config into running-config
+
   Strategy:
-    -s, --strategy { runcmds | erasereload } optional (default: runcmds)
+    -s, --strategy { runcmds | tclreload } optional (default: runcmds)
 
   General:
     -f, --file            The configuration file to apply
+    -r, --reload          Reload the device after applying config
     -h, --help            Show this help message
     -v, --version         Show version
     -d, --debug           Show response while applying)";
@@ -119,12 +126,18 @@ int main(int argc, char **argv) {
   // Run strategy
   bool printing = cliparser.cmdOptionExists("-d") || cliparser.cmdOptionExists("--debug");
   spdlog::info("Applying {:s}...", cfgPath);
-  auto res = strategy.apply(transport, config, printing);
+  auto res = strategy.apply(transport, cliparser, config, printing);
   if (res) {
     spdlog::error(*res);
     return -1;
   }
   spdlog::info("Done, no errors reported");
+
+  bool reload = cliparser.cmdOptionExists("-r") || cliparser.cmdOptionExists("--reload");
+  if (reload) {
+    spdlog::info("Reloading device...");
+    strategy.reload_device(transport);
+  }
 
   return EX_OK;
 }

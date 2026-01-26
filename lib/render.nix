@@ -141,10 +141,11 @@
           renderRoute lib route
       )
       device.routes)
-    + ''
+    +
+    lib.optionalString ((builtins.stringLength device.extraPostConfig) != 0) ''
       end
       configure terminal
-    ''
-    + mkSubTitle "Post Config"
-    + device.extraPostConfig;
+      ${mkSubTitle "Post Config"}
+      ${device.extraPostConfig}
+    '';
 }

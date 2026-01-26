@@ -4,7 +4,6 @@ _: {
       name = "My custom device";
       deviceType = "switch";
       interfaces = [
-        "g1/1/0"
         "g1/1/1"
         "g1/1/2"
         "g1/1/3"

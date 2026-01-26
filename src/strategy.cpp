@@ -7,23 +7,23 @@
 #include <ranges>
 #include <spdlog/spdlog.h>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <regex>
 #include <fmt/format.h>
 #include <string_view>
-#include <system_error>
 #include <vector>
 
 #include "include/strategy.h"
+#include "cli_parser.h"
 #include "include/transport.h"
 
 #define CHUNK 4096
 
-static std::regex ANYMODE(R"(^[A-Za-z0-9-]+(\(config(-[^\)]*)?\))?[>#]$)");
+static std::regex ANYMODE(R"(^[A-Za-z0-9-]+(\((config(-[^\)]*)?|tcl)\))?[>#]$)");
 static std::regex UEXEC(R"(^[A-Za-z0-9-]+>$)");
 static std::regex PEXEC(R"(^[A-Za-z0-9-]+#$)");
 static std::regex GLOBALCONFIG(R"(^[A-Za-z0-9-]+\((config)\)#$)");
+static std::regex TCL_CONTINUATION(R"(^\s*\+>\s*$)");
 
 std::string Strategy::strip_ansi(const std::string &s) const {
   // This is ChatGPT, too lazy to do it myself
@@ -64,6 +64,23 @@ bool Strategy::looks_like_prompt(const std::string &buffer, const std::regex &pr
   return false;
 }
 
+
+std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport, const std::string &pattern) const {
+  std::string buf;
+
+  while (transport.is_open()) {
+    auto chunk = transport.read(CHUNK);
+    if (!chunk) return std::unexpected<int>(chunk.error());
+
+    buf += chunk.value();
+
+    if (buf.contains(pattern))
+      return buf;
+  }
+
+  return std::unexpected<int>(-1);
+}
+
 std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, const std::regex &pattern) const {
   std::string buf;
 
@@ -94,7 +111,7 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
   return buf;
 }
 
-std::optional<std::string> Strategy::apply(Transport &transport, const std::string &config, const bool print) const {
+std::optional<std::string> Strategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
   std::string cmd;
   std::istringstream stream(config);
 
@@ -151,11 +168,46 @@ std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_clia
   if (strategy == "runcmds") {
     return std::make_unique<Strategy>();
   }
-  else if (strategy == "erasereload") {
-    throw std::runtime_error("not impl");
+  else if (strategy == "tclreload") {
+    return std::make_unique<TclReloadStrategy>();
   }
 
   return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
+}
+
+// TODO: refactor get_to_PEXEC and get_to_global_config_mode
+// since they share alot of logic
+std::optional<std::string> Strategy::get_to_PEXEC(Transport &transport) const {
+  auto err = transport.write("\n");
+  if (err) return err;
+
+  spdlog::info("Trying to enter PEXEC mode");
+  auto initialState = wait_for_prompt(transport, ANYMODE);
+  if (!initialState) return *initialState;
+  spdlog::info("Initial state: {:s}", *initialState);
+
+  if (looks_like_prompt(*initialState, PEXEC)) {
+    return std::nullopt;
+  }
+  else if (looks_like_prompt(*initialState, UEXEC)) {
+    err = transport.write("enable\n");
+    if (err) return err;
+
+    auto pexState = wait_for_prompt(transport, PEXEC);
+    if (!pexState) return *pexState;
+    return std::nullopt;
+  }
+  else if (looks_like_prompt(*initialState, GLOBALCONFIG)) {
+    err = transport.write("end\n");
+    if (err) return err;
+
+    auto pexState = wait_for_prompt(transport, PEXEC);
+    if (!pexState) return *pexState;
+    return std::nullopt;
+  }
+  else {
+    return fmt::format("Unkown inital state. Dont know how to get to PEXEC from:\n {:s}", *initialState);
+  }
 }
 
 std::optional<std::string> Strategy::get_to_global_config_mode(Transport &transport) const {
@@ -207,5 +259,75 @@ std::optional<std::string> Strategy::get_to_global_config_mode(Transport &transp
     return fmt::format("Unkown inital state. Dont know how to get to global config from:\n {:s}", *initialState);
   }
 
+  return std::nullopt;
+}
+
+
+std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
+  auto err = get_to_PEXEC(transport);
+  if (err) return err;
+
+  spdlog::info("Sucess! We are in PEXEC Mode");
+  spdlog::info("Entering TCL Scripting");
+
+  // Initial TCL setup to write bootstrap script
+  err = transport.write("tclsh\n");
+  if (err) return err;
+  auto prompt = wait_for_prompt(transport, ANYMODE);
+  if (!prompt) return "Failed to get into TCL prompt";
+
+  err = transport.write("set filename \"flash:bootstrap.cfg\"\n");
+  if (err) return err;
+  err = transport.write("set f [open $filename w]\n");
+  if (err) return err;
+
+  spdlog::info("Writing config into boostrap script");
+  std::string cmd;
+  std::istringstream stream(config);
+  while (std::getline(stream, cmd)) {
+    err = transport.write(fmt::format("puts $f \"{:s}\"\n", cmd));
+    if (err) return err;
+  }
+
+  err = transport.write("close $f\n");
+  if (err) return err;
+  err = transport.write("tclquit\n");
+  if (err) return err;
+
+  prompt = wait_for_prompt(transport, PEXEC);
+  if (!prompt) return "Failed to return from TCL to PEXEC";
+
+  if (print)
+    std::cout << *prompt << std::endl;
+
+  spdlog::info("Config written. Copying to startup-config...");
+
+  err = transport.write("copy flash:bootstrap.cfg startup-config\n\n");
+  if (err) return err;
+
+  if (cliparser.cmdOptionExists("--replace")) {
+    err = transport.write("copy flash:bootstrap.cfg running-config\n\n");
+    if (err) return err;
+    spdlog::info("Config copied to running-config\n");
+  }
+
+  return std::nullopt;
+}
+
+std::optional<std::string> Strategy::reload_device(Transport &transport) const {
+  auto err = transport.write("reload\n\n");
+  if (err) return err;
+
+  auto prompt = wait_for_prompt(transport, "System configuration has been modified");
+  if (!prompt) return err;
+  err = transport.write("n\n");
+  if (err) return err;
+
+  prompt = wait_for_prompt(transport, "Proceed with reload");
+  if (!prompt) return err;
+  err = transport.write("\n");
+  if (err) return err;
+
+  spdlog::info("Device is reloading now (might take a while)");
   return std::nullopt;
 }
