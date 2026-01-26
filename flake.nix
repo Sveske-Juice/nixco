@@ -24,7 +24,7 @@
 
         templates = {
           default = {
-            path = ./templates/single-device;
+            path = ./templates/default;
             description = "Nixco single device template";
             welcomeText = ''
               This template contains a flake.nix which contains

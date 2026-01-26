@@ -1,5 +1,5 @@
-_: {
-  config = {
+{lib, nixcoLib, ...}: {
+  config.devices."My Device" = {
     deviceSpec = {
       name = "My custom device";
       deviceType = "switch";

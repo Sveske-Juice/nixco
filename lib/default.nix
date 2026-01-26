@@ -5,6 +5,8 @@
 
     # nixcoLib global functions
   };
+
+  renderConfig = import ./render.nix;
 in {
   eval = files: let
     result = lib.evalModules {
@@ -33,5 +35,17 @@ in {
         "Device module assertion failed:\n"
         + builtins.concatStringsSep "\n" (map (a: "- " + a.message) failedAssertions)
       );
-  renderConfig = import ./render.nix;
+  inherit renderConfig;
+  renderAllDevices = pkgs: devices:
+    pkgs.runCommand "render-devices" {} ''
+          mkdir -p $out
+
+          ${lib.concatStringsSep "\n" (
+          lib.mapAttrsToList (deviceName: value: let
+          config = renderConfig.render { inherit lib; } value;
+          in ''
+          cp ${pkgs.writeText "test" config} "$out/${deviceName}.txt"
+          '') devices
+          )}
+          '';
 }

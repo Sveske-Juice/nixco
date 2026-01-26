@@ -17,12 +17,11 @@
     ...
   }:
     flake-parts.lib.mkFlake {inherit inputs;} (_: let
-      config = nixco.nixcoLib.evalDevice ./device.nix;
-      rendered = nixco.nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} config.config;
+      devices = (nixco.nixcoLib.eval [ ./default.nix ]).config.devices;
     in {
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
       perSystem = {pkgs, ...}: {
-        packages.default = pkgs.writeText "config" rendered;
+        packages.default = nixco.nixcoLib.renderAllDevices pkgs devices;
       };
     });
 }
