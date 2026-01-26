@@ -38,14 +38,15 @@ in {
   inherit renderConfig;
   renderAllDevices = pkgs: devices:
     pkgs.runCommand "render-devices" {} ''
-          mkdir -p $out
+      mkdir -p $out
 
-          ${lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (deviceName: value: let
-          config = renderConfig.render { inherit lib; } value;
-          in ''
+      ${lib.concatStringsSep "\n" (
+        lib.mapAttrsToList (deviceName: value: let
+          config = renderConfig.render {inherit lib;} value;
+        in ''
           cp ${pkgs.writeText "test" config} "$out/${deviceName}.txt"
-          '') devices
-          )}
-          '';
+        '')
+        devices
+      )}
+    '';
 }

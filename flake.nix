@@ -46,7 +46,7 @@
         allDevices.config.devices;
       in {
         packages.default = pkgs.callPackage ./package.nix {};
-        checks = builtins.trace allDevices.config renderAll;
+        checks = renderAll;
 
         devShells.default = pkgs.mkShellNoCC {
           packages = with pkgs; [

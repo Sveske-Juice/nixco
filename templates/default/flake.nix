@@ -17,7 +17,7 @@
     ...
   }:
     flake-parts.lib.mkFlake {inherit inputs;} (_: let
-      devices = (nixco.nixcoLib.eval [ ./default.nix ]).config.devices;
+      inherit ((nixco.nixcoLib.eval [./default.nix]).config) devices;
     in {
       systems = inputs.nixpkgs.lib.systems.flakeExposed;
       perSystem = {pkgs, ...}: {
