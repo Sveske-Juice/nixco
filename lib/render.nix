@@ -102,6 +102,21 @@
         ! ${title}
         ! +----------------------------+
       '';
+
+    renderGlobalIpSettings = device:
+      mkSubTitle "RESET"
+      +
+      ''
+        no ip domain name
+        no ip default-gateway
+        no ip name-server
+        no ip domain lookup
+      ''
+      + mkSubTitle "Settings"
+      + lib.optionalString (device.ip.domainName != null) "ip domain name ${device.ip.domainName}\n"
+      + lib.optionalString (device.ip.defaultGateway != null) "ip default-gateway ${device.ip.defaultGateway}\n"
+      + lib.optionalString (device.ip.domainLookup.enable) "ip domain lookup\n"
+      ;
   in
     mkSubTitle "Pre config"
     + device.extraPreConfig
@@ -123,6 +138,8 @@
       '')
       device.vlans))
     + lib.optionalString ((builtins.length device.vlans) != 0) "exit\n"
+    + mkTitle "Global IP Settings"
+    + renderGlobalIpSettings device
     + mkTitle "Interfaces"
     + mkSubTitle "RESET"
     + builtins.concatStringsSep "" (builtins.map (int: ''
