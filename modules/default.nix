@@ -4,6 +4,7 @@
       ./banner.nix
       ./device.nix
       ./interfaces.nix
+      ./acl.nix
       ./routing.nix
       ./vlan.nix
       ./assertions.nix

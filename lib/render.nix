@@ -103,6 +103,14 @@
         ! +----------------------------+
       '';
 
+    renderACLs = device:
+      mkSubTitle "RESET"
+      +
+      ''
+      ''
+      +
+      mkSubTitle "ACL Entry"
+      ;
     renderGlobalIpSettings = device:
       mkSubTitle "RESET"
       +

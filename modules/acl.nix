@@ -1,0 +1,85 @@
+{lib, ...}: let
+  types = import ../lib/types.nix;
+  extendedType = lib.types.submodule (_: {
+    options = {
+      nameOrId = lib.mkOption {
+        type = lib.types.either (lib.types.between 100 2699) lib.types.str;
+        description = "The access-list-name or access-list-number. Can be either int or str";
+      };
+      rules = lib.mkOption {
+        type = lib.types.listOf (lib.types.submodule (_: {
+          options = {
+            remark = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              description = "Optional remark for this rule entry";
+            };
+            action = lib.mkOption {
+              type = lib.types.enum [ "deny" "permit" ];
+            };
+            log = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+            };
+            source = lib.mkOption {
+              type = lib.types.either (lib.types.enum [ "any" ]) types.ipAddrWildcardType;
+            };
+          };
+        }));
+        default = [];
+      };
+    };
+  });
+  standardType = lib.types.submodule (_: {
+    options = {
+      nameOrId = lib.mkOption {
+        type = lib.types.either (lib.types.between 1 99) lib.types.str;
+        description = "The access-list-name or access-list-number. Can be either int or str";
+      };
+      rules = lib.mkOption {
+        type = lib.types.listOf (lib.types.submodule (_: {
+          options = {
+            remark = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              description = "Optional remark for this rule entry";
+            };
+            action = lib.mkOption {
+              type = lib.types.enum [ "deny" "permit" ];
+            };
+            log = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+            };
+            protocol = lib.mkOption {
+              type = lib.types.str;
+              example = "ip";
+            };
+            op = lib.mkOption {
+              type = lib.types.str;
+              description = "The operator and argument to use";
+              example = "range 10 20";
+            };
+            source = lib.mkOption {
+              type = lib.types.either (lib.types.enum [ "any" ]) types.ipAddrWildcardType;
+            };
+            destination = lib.mkOption {
+              type = lib.types.either (lib.types.enum [ "any" ]) types.ipAddrWildcardType;
+            };
+          };
+        }));
+        default = [];
+      };
+    };
+  });
+in {
+  options.acl = lib.mkOption {
+    type = lib.types.submodule (_: {
+      options.standard = lib.mkOption {
+        type = standardType;
+      };
+      options.extended = lib.mkOption {
+      };
+    });
+  };
+}
