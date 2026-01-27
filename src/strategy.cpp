@@ -308,7 +308,14 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   if (cliparser.cmdOptionExists("--replace")) {
     err = transport.write("copy flash:bootstrap.cfg running-config\n\n");
     if (err) return err;
-    spdlog::info("Config copied to running-config\n");
+    spdlog::info("Copying config to running-config...");
+
+    // Should return to prompt after copying into running-config
+    prompt = wait_for_prompt(transport, ANYMODE);
+    if (!prompt) return "Failed to return to prompt after copying to running-config";
+
+    if (print)
+      std::cout << *prompt << std::endl;
   }
 
   return std::nullopt;
