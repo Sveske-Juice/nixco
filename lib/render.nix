@@ -148,6 +148,14 @@
         ) acl.rules))
       ) device.acl.extended))
       ;
+    renderGlobalIpv6Settings = device:
+      mkSubTitle "RESET"
+      +
+      ''
+      ''
+      + mkSubTitle "Settings"
+      + (if device.ipv6.routing then "ipv6 unicast-routing\n" else "no ipv6 unicast-routing\n")
+    ;
     renderGlobalIpSettings = device:
       mkSubTitle "RESET"
       +
@@ -161,6 +169,7 @@
       + lib.optionalString (device.ip.domainName != null) "ip domain name ${device.ip.domainName}\n"
       + lib.optionalString (device.ip.defaultGateway != null) "ip default-gateway ${device.ip.defaultGateway}\n"
       + lib.optionalString (device.ip.domainLookup.enable) "ip domain lookup\n"
+      + (if device.ip.routing then "ip routing\n" else "no ip routing\n")
       ;
   in
     mkSubTitle "Pre config"
@@ -185,8 +194,10 @@
     + lib.optionalString ((builtins.length device.vlans) != 0) "exit\n"
     + mkTitle "ACLs"
     + renderACLs device
-    + mkTitle "Global IP Settings"
+    + mkTitle "Global IPv4 Settings"
     + renderGlobalIpSettings device
+    + mkTitle "Global IPv6 Settings"
+    + renderGlobalIpv6Settings device
     + mkTitle "Interfaces"
     + mkSubTitle "RESET"
     + builtins.concatStringsSep "" (builtins.map (int: ''

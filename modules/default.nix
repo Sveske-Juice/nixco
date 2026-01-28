@@ -3,6 +3,8 @@
     imports = [
       ./banner.nix
       ./device.nix
+      ./ip.nix
+      ./ipv6.nix
       ./interfaces.nix
       ./acl.nix
       ./routing.nix
