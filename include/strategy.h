@@ -8,13 +8,37 @@
 #include <optional>
 #include <regex>
 #include <string>
+#include <unordered_map>
+
+enum MODE {
+  ANYMODE,
+  UEXEC,
+  PEXEC,
+  GCFG, // global config
+  TCL_CONTINUATION,
+};
+
+static std::unordered_map<MODE, std::string> modeNames = {
+  { ANYMODE, "Any Mode" },
+  { UEXEC, "User Exec Mode"},
+  { PEXEC, "Privelege Exec Mode"},
+  { GCFG, "Global Configuration Mode"},
+  { TCL_CONTINUATION, "TCL Continuation"},
+};
+
+static std::unordered_map<MODE, std::string> modePatterns = {
+  { ANYMODE, R"(^[A-Za-z0-9-]+(\((config(-[^\)]*)?|tcl)\))?[>#]$)" },
+  { UEXEC, R"(^[A-Za-z0-9-]+>$)" },
+  { PEXEC, R"(^[A-Za-z0-9-]+#$)" },
+  { GCFG, R"(^[A-Za-z0-9-]+\((config)\)#$)" },
+  { TCL_CONTINUATION, R"(^\s*\+>\s*$)" }
+};
 
 class Strategy {
 protected:
   std::string strip_ansi(const std::string &s) const;
   bool looks_like_prompt(const std::string &buffer, const std::regex &prompt) const;
-  std::optional<std::string> get_to_global_config_mode(Transport &transport) const;
-  std::optional<std::string> get_to_PEXEC(Transport &transport) const;
+  std::expected<MODE, std::string> get_to_mode(Transport &transport, MODE mode) const;
 public:
   virtual ~Strategy() = default;
   std::optional<std::string> reload_device(Transport &transport) const;

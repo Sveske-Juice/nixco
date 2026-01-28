@@ -19,12 +19,6 @@
 
 #define CHUNK 4096
 
-static std::regex ANYMODE(R"(^[A-Za-z0-9-]+(\((config(-[^\)]*)?|tcl)\))?[>#]$)");
-static std::regex UEXEC(R"(^[A-Za-z0-9-]+>$)");
-static std::regex PEXEC(R"(^[A-Za-z0-9-]+#$)");
-static std::regex GLOBALCONFIG(R"(^[A-Za-z0-9-]+\((config)\)#$)");
-static std::regex TCL_CONTINUATION(R"(^\s*\+>\s*$)");
-
 std::string Strategy::strip_ansi(const std::string &s) const {
   // This is ChatGPT, too lazy to do it myself
   std::string res = s;
@@ -103,6 +97,18 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
       return "MULTILINE";
     }
 
+    if (buf.find("Password:") != std::string::npos) {
+      spdlog::warn("Password required!");
+      std::string pass;
+      std::cout << "Password: ";
+      std::cin >> pass;
+
+      auto err = transport.write(fmt::format("{:s}\n", pass));
+      if (err) return std::unexpected<int>(-1);
+
+      buf.clear();
+    }
+
     if (looks_like_prompt(buf, pattern)) {
       break;
     }
@@ -116,8 +122,8 @@ std::optional<std::string> Strategy::apply(Transport &transport, const CliParser
   std::istringstream stream(config);
 
   // Get into global configuration mode
-  auto err = get_to_global_config_mode(transport);
-  if (err) return err;
+  auto mode = get_to_mode(transport, GCFG);
+  if (!mode) return mode.error();
 
   spdlog::info("Success! We are in global config mode");
 
@@ -133,7 +139,7 @@ std::optional<std::string> Strategy::apply(Transport &transport, const CliParser
     }
 
     // Wait for execution
-    auto recvBuffer = wait_for_prompt(transport, ANYMODE);
+    auto recvBuffer = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
     if (!recvBuffer.has_value()) {
       return std::string("Failed to wait for prompt after writing command.");
     }
@@ -175,91 +181,56 @@ std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_clia
   return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
 }
 
-// TODO: refactor get_to_PEXEC and get_to_global_config_mode
-// since they share alot of logic
-std::optional<std::string> Strategy::get_to_PEXEC(Transport &transport) const {
+std::expected<MODE, std::string> Strategy::get_to_mode(Transport &transport, MODE mode) const {
+  // We must poke serial sometimes
   auto err = transport.write("\n");
-  if (err) return err;
+  if (err) return std::unexpected<std::string>(*err);
 
-  spdlog::info("Trying to enter PEXEC mode");
-  auto initialState = wait_for_prompt(transport, ANYMODE);
-  if (!initialState) return *initialState;
+  spdlog::info("Tring to enter {:s}", modeNames[mode]);
+
+  auto initialState = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
+  if (!initialState) return std::unexpected<std::string>(*initialState);
+
   spdlog::info("Initial state: {:s}", *initialState);
+  // Already in mode
+  if (looks_like_prompt(*initialState, std::regex(modePatterns[mode])))
+    return mode;
 
-  if (looks_like_prompt(*initialState, PEXEC)) {
-    return std::nullopt;
+  switch (mode) {
+    case PEXEC: {
+      if (looks_like_prompt(*initialState, std::regex(modePatterns[UEXEC]))) {
+        err = transport.write("enable\n");
+        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+        if (!prompt) return std::unexpected<std::string>("err");
+        return mode;
+      }
+      else if (looks_like_prompt(*initialState, std::regex(modePatterns[GCFG]))) {
+        err = transport.write("end\n");
+        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+        if (!prompt) return std::unexpected<std::string>("err");
+        return mode;
+      }
+      break;
+    }
+    case GCFG: {
+      if (looks_like_prompt(*initialState, std::regex(modePatterns[UEXEC]))) {
+        err = transport.write("enable\n");
+        initialState = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+        if (!initialState) return std::unexpected<std::string>("err");
+      }
+
+      if (looks_like_prompt(*initialState, std::regex(modePatterns[PEXEC]))) {
+        err = transport.write("configure terminal\n");
+        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[GCFG]));
+        if (!prompt) return std::unexpected<std::string>("err");
+        return mode;
+      }
+      break;
+    }
+    default:
+      break;
   }
-  else if (looks_like_prompt(*initialState, UEXEC)) {
-    err = transport.write("enable\n");
-    if (err) return err;
-
-    auto pexState = wait_for_prompt(transport, PEXEC);
-    if (!pexState) return *pexState;
-    return std::nullopt;
-  }
-  else if (looks_like_prompt(*initialState, GLOBALCONFIG)) {
-    err = transport.write("end\n");
-    if (err) return err;
-
-    auto pexState = wait_for_prompt(transport, PEXEC);
-    if (!pexState) return *pexState;
-    return std::nullopt;
-  }
-  else {
-    return fmt::format("Unkown inital state. Dont know how to get to PEXEC from:\n {:s}", *initialState);
-  }
-}
-
-std::optional<std::string> Strategy::get_to_global_config_mode(Transport &transport) const {
-  auto err = transport.write("\n");
-  if (err) return err;
-
-  spdlog::info("Trying to enter Global Configuration Mode");
-  auto initialState = wait_for_prompt(transport, ANYMODE);
-  if (!initialState) return *initialState;
-
-  spdlog::info("RX: {}",
-    [&]{
-        std::string s;
-        for (unsigned char c : *initialState)
-            fmt::format_to(std::back_inserter(s), "{:02X} ", c);
-        return s;
-    }()
-  );
-  spdlog::info("Initial state: {:s}", *initialState);
-
-
-  // What should we do from initial state to get to global configuration mode?
-  if (looks_like_prompt(*initialState, UEXEC)) { // Starting from User EXEC
-    spdlog::info("Elevating from User Exec Mode");
-    auto err = transport.write("enable\n");
-    if (err) return err;
-
-    auto pexState = wait_for_prompt(transport, PEXEC);
-    if (!pexState) return *pexState;
-
-    // Goto global config
-    err = transport.write("config terminal\n");
-    if (err) return err;
-
-    auto endState = wait_for_prompt(transport, GLOBALCONFIG);
-    if (!endState) return *endState;
-  }
-  else if (looks_like_prompt(*initialState, PEXEC)) { // Starting from Privelege EXEC
-    spdlog::info("Going to global config from Privelege EXEC");
-    err = transport.write("config terminal\n");
-    if (err) return err;
-
-    auto endState = wait_for_prompt(transport, GLOBALCONFIG);
-    if (!endState) return *endState;
-  }
-  else if (looks_like_prompt(*initialState, GLOBALCONFIG)) { // Could already be in global config
-  }
-  else {
-    return fmt::format("Unkown inital state. Dont know how to get to global config from:\n {:s}", *initialState);
-  }
-
-  return std::nullopt;
+  return std::unexpected<std::string>(fmt::format("Dont know how to get to {:s} from {:s}", modeNames[mode], *initialState));
 }
 
 std::string escape_tcl_line(const std::string &line) {
@@ -279,16 +250,16 @@ std::string escape_tcl_line(const std::string &line) {
 }
 
 std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
-  auto err = get_to_PEXEC(transport);
-  if (err) return err;
+  auto mode = get_to_mode(transport, PEXEC);
+  if (!mode) return mode.error();
 
   spdlog::info("Sucess! We are in PEXEC Mode");
   spdlog::info("Entering TCL Scripting");
 
   // Initial TCL setup to write bootstrap script
-  err = transport.write("tclsh\n");
+  auto err = transport.write("tclsh\n");
   if (err) return err;
-  auto prompt = wait_for_prompt(transport, ANYMODE);
+  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
   if (!prompt) return "Failed to get into TCL prompt";
 
   err = transport.write("set filename \"flash:bootstrap.cfg\"\n");
@@ -309,7 +280,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   err = transport.write("tclquit\n");
   if (err) return err;
 
-  prompt = wait_for_prompt(transport, PEXEC);
+  prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
   if (!prompt) return "Failed to return from TCL to PEXEC";
 
   if (print)
@@ -321,7 +292,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   if (err) return err;
 
   // Should return to prompt after copying
-  prompt = wait_for_prompt(transport, ANYMODE);
+  prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
   if (!prompt) return "Failed to return to prompt after copying to running-config";
   if (print)
     std::cout << *prompt << std::endl;
@@ -332,7 +303,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
     spdlog::info("Copying config to running-config...");
 
     // Should return to prompt after copying into running-config
-    prompt = wait_for_prompt(transport, ANYMODE);
+    prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
     if (!prompt) return "Failed to return to prompt after copying to running-config";
 
     if (print)
