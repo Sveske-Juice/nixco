@@ -1,5 +1,5 @@
 {lib, ...}: let
-  types = import ../lib/types.nix {inherit lib; };
+  types = import ../lib/types.nix {inherit lib;};
   standardType = lib.types.submodule (_: {
     options = {
       name = lib.mkOption {
@@ -21,14 +21,14 @@
               description = "Optional remark for this rule entry";
             };
             action = lib.mkOption {
-              type = lib.types.enum [ "deny" "permit" ];
+              type = lib.types.enum ["deny" "permit"];
             };
             log = lib.mkOption {
               type = lib.types.bool;
               default = false;
             };
             source = lib.mkOption {
-              type = lib.types.either (lib.types.enum [ "any" ]) types.ipAddrWildcardType;
+              type = lib.types.either (lib.types.enum ["any"]) types.ipAddrWildcardType;
             };
           };
         }));
@@ -57,7 +57,7 @@
               description = "Optional remark for this rule entry";
             };
             action = lib.mkOption {
-              type = lib.types.enum [ "deny" "permit" ];
+              type = lib.types.enum ["deny" "permit"];
             };
             log = lib.mkOption {
               type = lib.types.bool;
@@ -74,10 +74,10 @@
               example = "range 10 20";
             };
             source = lib.mkOption {
-              type = lib.types.either (lib.types.enum [ "any" ]) types.ipAddrWildcardType;
+              type = lib.types.either (lib.types.enum ["any"]) types.ipAddrWildcardType;
             };
             destination = lib.mkOption {
-              type = lib.types.either (lib.types.enum [ "any" ]) types.ipAddrWildcardType;
+              type = lib.types.either (lib.types.enum ["any"]) types.ipAddrWildcardType;
             };
           };
         }));

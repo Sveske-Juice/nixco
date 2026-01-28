@@ -104,6 +104,24 @@
         type = lib.types.nullOr switchPortType;
         default = null;
       };
+      accessGroup = lib.mkOption {
+        type = lib.types.nullOr (lib.types.submodule (_: {
+          options = {
+            name = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+            };
+            id = lib.mkOption {
+              type = lib.types.nullOr (lib.types.ints.between 1 2699);
+              default = null;
+            };
+            interface = lib.mkOption {
+              type = lib.types.enum ["in" "out"];
+            };
+          };
+        }));
+        default = null;
+      };
       channelGroup = lib.mkOption {
         type = lib.types.nullOr channelGroupType;
         description = "Port-Channel/EtherChannel setup";

@@ -18,6 +18,19 @@ in {
         Banner
       '';
 
+      acl.standard = [
+        {
+          id = 1;
+          rules = [
+            {
+              action = "permit";
+              source = "any";
+              log = true;
+            }
+          ];
+        }
+      ];
+
       vlans =
         lib.attrsets.mapAttrsToList (key: value: {
           name = key;
@@ -29,6 +42,10 @@ in {
         "g1/0/1-24,g1/1/1-4" = {
           shutdown = true;
           description = "Admin Shutdown";
+          accessGroup = {
+            id = 1;
+            interface = "in";
+          };
           switchport = {
             mode = "access";
             negotiate = false;

@@ -57,7 +57,6 @@
         else "interface ${ifname}\n"
       )
       + lib.optionalString (value.description != null) "description \"${value.description}\"\n"
-      + lib.optionalString (!value.shutdown) "no shutdown\n"
       + (
         if value.switchport != null
         then renderSwitchport lib value
@@ -92,7 +91,11 @@
           )
         )
       )
-      + lib.optionalString (value.channelGroup != null) "channel-group ${toString value.channelGroup.groupNumber} mode ${value.channelGroup.mode}\n";
+      + lib.optionalString (value.channelGroup != null) "channel-group ${toString value.channelGroup.groupNumber} mode ${value.channelGroup.mode}\n"
+      + lib.optionalString (value.accessGroup != null) "access-group ${if value.accessGroup.id != null then toString value.accessGroup.id else value.accessGroup.name} ${value.accessGroup.interface}\n"
+      + (if value.shutdown then "shutdown\n" else "no shutdown\n")
+    ;
+
     isRange = key:
       builtins.match ".*[-,].*" key != null;
     mkSubTitle = title: lib.optionalString device.comments "!==== ${title} ====!\n";
@@ -105,61 +108,76 @@
 
     renderACLs = device:
       mkSubTitle "RESET"
-      +
-      ''
+      + ''
         ! ACLs cant be reset automaticaly, to reset you must use a strategy which reloads the device
       ''
-      +
-      mkSubTitle "Standard ACLs"
-      +
-      (builtins.concatStringsSep "\n" (map (acl:
-        ''
-        ip access-list standard ${if acl.name != null then acl.name else toString acl.id}
-        ''
-        +
-        (builtins.concatStringsSep "\n" (map (rule:
-        lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
-        +
-        ''
-        ${rule.action} ${if rule.source == "any" then "any" else "${rule.source.address} ${rule.source.wildcard}"}
-        ''
-        ) acl.rules))
-      ) device.acl.standard))
-      +
-      mkSubTitle "Extended ACLs"
-      +
-      (builtins.concatStringsSep "\n" (map (acl:
-        ''
-        ip access-list extended ${if acl.name != null then acl.name else toString acl.id}
-        ''
-        +
-        (builtins.concatStringsSep "\n" (map (rule:
-        lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
-        +
-        "${rule.action} ${rule.protocol} "
-        +
-        "${if rule.source == "any" then "any" else "${rule.source.address} ${rule.source.wildcard}"} "
-        +
-        "${if rule.destination == "any" then "any" else "${rule.destination.address} ${rule.destination.wildcard}"} "
-        +
-        lib.optionalString (rule.op != null) "${rule.op} "
-        +
-        lib.optionalString (rule.log) "log"
-        ) acl.rules))
-      ) device.acl.extended))
-      ;
+      + mkSubTitle "Standard ACLs"
+      + (builtins.concatStringsSep "\n" (map (
+          acl:
+            ''
+              ip access-list standard ${
+                if acl.name != null
+                then acl.name
+                else toString acl.id
+              }
+            ''
+            + (builtins.concatStringsSep "\n" (map (
+                rule:
+                  lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
+                  + ''
+                    ${rule.action} ${
+                      if rule.source == "any"
+                      then "any"
+                      else "${rule.source.address} ${rule.source.wildcard}"
+                    }
+                  ''
+              )
+              acl.rules))
+        )
+        device.acl.standard))
+      + mkSubTitle "Extended ACLs"
+      + (builtins.concatStringsSep "\n" (map (
+          acl:
+            ''
+              ip access-list extended ${
+                if acl.name != null
+                then acl.name
+                else toString acl.id
+              }
+            ''
+            + (builtins.concatStringsSep "\n" (map (
+                rule:
+                  lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
+                  + "${rule.action} ${rule.protocol} "
+                  + "${
+                    if rule.source == "any"
+                    then "any"
+                    else "${rule.source.address} ${rule.source.wildcard}"
+                  } "
+                  + "${
+                    if rule.destination == "any"
+                    then "any"
+                    else "${rule.destination.address} ${rule.destination.wildcard}"
+                  } "
+                  + lib.optionalString (rule.op != null) "${rule.op} "
+                  + lib.optionalString rule.log "log"
+              )
+              acl.rules))
+        )
+        device.acl.extended));
     renderGlobalIpv6Settings = device:
       mkSubTitle "RESET"
-      +
-      ''
+      + ''
       ''
       + mkSubTitle "Settings"
-      + (if device.ipv6.routing then "ipv6 unicast-routing\n" else "no ipv6 unicast-routing\n")
-    ;
+      + (
+        if device.ipv6.routing
+        then "ipv6 unicast-routing\n"
+        else "no ipv6 unicast-routing\n"
+      );
     renderGlobalIpSettings = device:
       mkSubTitle "RESET"
-      +
-      ''
+      + ''
         no ip domain name
         no ip default-gateway
         no ip name-server
@@ -168,11 +186,22 @@
       + mkSubTitle "Settings"
       + lib.optionalString (device.ip.domainName != null) "ip domain name ${device.ip.domainName}\n"
       + lib.optionalString (device.ip.defaultGateway != null) "ip default-gateway ${device.ip.defaultGateway}\n"
-      + lib.optionalString (device.ip.domainLookup.enable) "ip domain lookup\n"
-      + (if device.ip.routing then "ip routing\n" else "no ip routing\n")
-      + (if device.ip.http.server.enable then "ip http server\n" else "no ip http server\n")
-      + (if device.ip.http.secureServer.enable then "ip http secure-server\n" else "no ip http secure-server\n")
-      ;
+      + lib.optionalString device.ip.domainLookup.enable "ip domain lookup\n"
+      + (
+        if device.ip.routing
+        then "ip routing\n"
+        else "no ip routing\n"
+      )
+      + (
+        if device.ip.http.server.enable
+        then "ip http server\n"
+        else "no ip http server\n"
+      )
+      + (
+        if device.ip.http.secureServer.enable
+        then "ip http secure-server\n"
+        else "no ip http secure-server\n"
+      );
   in
     mkSubTitle "Pre config"
     + device.extraPreConfig
@@ -218,8 +247,7 @@
           renderRoute lib route
       )
       device.routes)
-    +
-    lib.optionalString ((builtins.stringLength device.extraPostConfig) != 0) ''
+    + lib.optionalString ((builtins.stringLength device.extraPostConfig) != 0) ''
       ${mkSubTitle "Post Config"}
       ${device.extraPostConfig}
     '';
