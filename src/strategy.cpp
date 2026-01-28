@@ -262,6 +262,21 @@ std::optional<std::string> Strategy::get_to_global_config_mode(Transport &transp
   return std::nullopt;
 }
 
+std::string escape_tcl_line(const std::string &line) {
+    std::string out;
+    out.reserve(line.size());
+    for (char c : line) {
+        switch (c) {
+            case '$': out += "\\$"; break;    // prevent variable expansion
+            case '[': out += "\\["; break;    // prevent command execution
+            case ']': out += "\\]"; break;
+            case '"': out += "\\\""; break;   // escape quotes
+            case '\\': out += "\\\\"; break;  // escape backslash
+            default: out += c; break;
+        }
+    }
+    return out;
+}
 
 std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
   auto err = get_to_PEXEC(transport);
@@ -285,7 +300,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   std::string cmd;
   std::istringstream stream(config);
   while (std::getline(stream, cmd)) {
-    err = transport.write(fmt::format("puts $f \"{:s}\"\n", cmd));
+    err = transport.write(fmt::format("puts $f \"{:s}\"\n", escape_tcl_line(cmd)));
     if (err) return err;
   }
 
@@ -304,6 +319,12 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
 
   err = transport.write("copy flash:bootstrap.cfg startup-config\n\n");
   if (err) return err;
+
+  // Should return to prompt after copying
+  prompt = wait_for_prompt(transport, ANYMODE);
+  if (!prompt) return "Failed to return to prompt after copying to running-config";
+  if (print)
+    std::cout << *prompt << std::endl;
 
   if (cliparser.cmdOptionExists("--replace")) {
     err = transport.write("copy flash:bootstrap.cfg running-config\n\n");

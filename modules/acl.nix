@@ -1,10 +1,16 @@
 {lib, ...}: let
   types = import ../lib/types.nix;
-  extendedType = lib.types.submodule (_: {
+  standardType = lib.types.submodule (_: {
     options = {
-      nameOrId = lib.mkOption {
-        type = lib.types.either (lib.types.between 100 2699) lib.types.str;
-        description = "The access-list-name or access-list-number. Can be either int or str";
+      name = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "The access-list-name";
+      };
+      id = lib.mkOption {
+        type = lib.types.nullOr (lib.types.ints.between 1 99);
+        default = null;
+        description = "The access-list-number";
       };
       rules = lib.mkOption {
         type = lib.types.listOf (lib.types.submodule (_: {
@@ -30,7 +36,7 @@
       };
     };
   });
-  standardType = lib.types.submodule (_: {
+  extendedType = lib.types.submodule (_: {
     options = {
       nameOrId = lib.mkOption {
         type = lib.types.either (lib.types.between 1 99) lib.types.str;
@@ -74,11 +80,13 @@
   });
 in {
   options.acl = lib.mkOption {
+    default = {};
     type = lib.types.submodule (_: {
       options.standard = lib.mkOption {
-        type = standardType;
+        type = lib.types.listOf standardType;
       };
       options.extended = lib.mkOption {
+        type = lib.types.listOf extendedType;
       };
     });
   };

@@ -107,9 +107,24 @@
       mkSubTitle "RESET"
       +
       ''
+        ! ACLs cant be reset automaticaly, to reset you must use a strategy which reloads the device
       ''
       +
-      mkSubTitle "ACL Entry"
+      mkSubTitle "Standard ACLs"
+      +
+      (builtins.concatStringsSep "\n" (map (acl:
+        ''
+        ip access-list standard ${if acl.name != null then acl.name else toString acl.id}
+        ''
+        +
+        (builtins.concatStringsSep "\n" (map (rule:
+        lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
+        +
+        ''
+        ${rule.action} ${if rule.source == "any" then "any" else "${rule.source.address} ${rule.source.wildcard}"}
+        ''
+        ) acl.rules))
+      ) device.acl.standard))
       ;
     renderGlobalIpSettings = device:
       mkSubTitle "RESET"
@@ -146,6 +161,8 @@
       '')
       device.vlans))
     + lib.optionalString ((builtins.length device.vlans) != 0) "exit\n"
+    + mkTitle "ACLs"
+    + renderACLs device
     + mkTitle "Global IP Settings"
     + renderGlobalIpSettings device
     + mkTitle "Interfaces"
