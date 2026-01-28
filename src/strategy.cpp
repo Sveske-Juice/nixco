@@ -59,7 +59,7 @@ bool Strategy::looks_like_prompt(const std::string &buffer, const std::regex &pr
 }
 
 
-std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport, const std::string &pattern) const {
+std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport, const std::string &pattern, bool printOutput) const {
   std::string buf;
 
   while (transport.is_open()) {
@@ -67,6 +67,8 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport, 
     if (!chunk) return std::unexpected<int>(chunk.error());
 
     buf += chunk.value();
+    if (printOutput)
+      std::cout << chunk.value();
 
     if (buf.contains(pattern))
       return buf;
@@ -75,7 +77,7 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport, 
   return std::unexpected<int>(-1);
 }
 
-std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, const std::regex &pattern) const {
+std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, const std::regex &pattern, bool printOutput) const {
   std::string buf;
 
   while (transport.is_open()) {
@@ -86,6 +88,8 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
       return std::unexpected<int>(chunk.error());
 
     buf += chunk.value();
+    if (printOutput)
+      std::cout << chunk.value();
 
     if (buf.find("--More--") != std::string::npos) {
       spdlog::warn("Encounted paged output. Disable with \"terminal length 0\"\nRefusing to continue");
@@ -122,7 +126,7 @@ std::optional<std::string> Strategy::apply(Transport &transport, const CliParser
   std::istringstream stream(config);
 
   // Get into global configuration mode
-  auto mode = get_to_mode(transport, GCFG);
+  auto mode = get_to_mode(transport, GCFG, print);
   if (!mode) return mode.error();
 
   spdlog::info("Success! We are in global config mode");
@@ -139,7 +143,7 @@ std::optional<std::string> Strategy::apply(Transport &transport, const CliParser
     }
 
     // Wait for execution
-    auto recvBuffer = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
+    auto recvBuffer = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
     if (!recvBuffer.has_value()) {
       return std::string("Failed to wait for prompt after writing command.");
     }
@@ -155,9 +159,6 @@ std::optional<std::string> Strategy::apply(Transport &transport, const CliParser
           break;
       }
     }
-
-    if (print)
-      std::cout << recvBuffer.value() << std::endl;
 
     // TODO: catch + handle error in command
   }
@@ -181,14 +182,14 @@ std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_clia
   return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
 }
 
-std::expected<MODE, std::string> Strategy::get_to_mode(Transport &transport, MODE mode) const {
+std::expected<MODE, std::string> Strategy::get_to_mode(Transport &transport, MODE mode, bool print) const {
   // We must poke serial sometimes
   auto err = transport.write("\n");
   if (err) return std::unexpected<std::string>(*err);
 
   spdlog::info("Tring to enter {:s}", modeNames[mode]);
 
-  auto initialState = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
+  auto initialState = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
   if (!initialState) return std::unexpected<std::string>(*initialState);
 
   spdlog::info("Initial state: {:s}", *initialState);
@@ -200,13 +201,13 @@ std::expected<MODE, std::string> Strategy::get_to_mode(Transport &transport, MOD
     case PEXEC: {
       if (looks_like_prompt(*initialState, std::regex(modePatterns[UEXEC]))) {
         err = transport.write("enable\n");
-        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), print);
         if (!prompt) return std::unexpected<std::string>("err");
         return mode;
       }
       else if (looks_like_prompt(*initialState, std::regex(modePatterns[GCFG]))) {
         err = transport.write("end\n");
-        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), print);
         if (!prompt) return std::unexpected<std::string>("err");
         return mode;
       }
@@ -215,13 +216,13 @@ std::expected<MODE, std::string> Strategy::get_to_mode(Transport &transport, MOD
     case GCFG: {
       if (looks_like_prompt(*initialState, std::regex(modePatterns[UEXEC]))) {
         err = transport.write("enable\n");
-        initialState = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+        initialState = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), print);
         if (!initialState) return std::unexpected<std::string>("err");
       }
 
       if (looks_like_prompt(*initialState, std::regex(modePatterns[PEXEC]))) {
         err = transport.write("configure terminal\n");
-        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[GCFG]));
+        auto prompt = wait_for_prompt(transport, std::regex(modePatterns[GCFG]), print);
         if (!prompt) return std::unexpected<std::string>("err");
         return mode;
       }
@@ -250,7 +251,7 @@ std::string escape_tcl_line(const std::string &line) {
 }
 
 std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
-  auto mode = get_to_mode(transport, PEXEC);
+  auto mode = get_to_mode(transport, PEXEC, print);
   if (!mode) return mode.error();
 
   spdlog::info("Sucess! We are in PEXEC Mode");
@@ -259,7 +260,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   // Initial TCL setup to write bootstrap script
   auto err = transport.write("tclsh\n");
   if (err) return err;
-  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
+  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
   if (!prompt) return "Failed to get into TCL prompt";
 
   err = transport.write("set filename \"flash:bootstrap.cfg\"\n");
@@ -280,11 +281,8 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   err = transport.write("tclquit\n");
   if (err) return err;
 
-  prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]));
+  prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), print);
   if (!prompt) return "Failed to return from TCL to PEXEC";
-
-  if (print)
-    std::cout << *prompt << std::endl;
 
   spdlog::info("Config written. Copying to startup-config...");
 
@@ -292,10 +290,8 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   if (err) return err;
 
   // Should return to prompt after copying
-  prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
+  prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
   if (!prompt) return "Failed to return to prompt after copying to running-config";
-  if (print)
-    std::cout << *prompt << std::endl;
 
   if (cliparser.cmdOptionExists("--replace")) {
     err = transport.write("copy flash:bootstrap.cfg running-config\n\n");
@@ -303,11 +299,8 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
     spdlog::info("Copying config to running-config...");
 
     // Should return to prompt after copying into running-config
-    prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]));
+    prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
     if (!prompt) return "Failed to return to prompt after copying to running-config";
-
-    if (print)
-      std::cout << *prompt << std::endl;
   }
 
   return std::nullopt;
@@ -317,12 +310,12 @@ std::optional<std::string> Strategy::reload_device(Transport &transport) const {
   auto err = transport.write("reload\n\n");
   if (err) return err;
 
-  auto prompt = wait_for_prompt(transport, "System configuration has been modified");
+  auto prompt = wait_for_prompt(transport, "System configuration has been modified", true);
   if (!prompt) return err;
   err = transport.write("n\n");
   if (err) return err;
 
-  prompt = wait_for_prompt(transport, "Proceed with reload");
+  prompt = wait_for_prompt(transport, "Proceed with reload", true);
   if (!prompt) return err;
   err = transport.write("\n");
   if (err) return err;

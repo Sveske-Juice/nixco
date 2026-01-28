@@ -38,12 +38,12 @@ class Strategy {
 protected:
   std::string strip_ansi(const std::string &s) const;
   bool looks_like_prompt(const std::string &buffer, const std::regex &prompt) const;
-  std::expected<MODE, std::string> get_to_mode(Transport &transport, MODE mode) const;
+  std::expected<MODE, std::string> get_to_mode(Transport &transport, MODE mode, bool print) const;
 public:
   virtual ~Strategy() = default;
   std::optional<std::string> reload_device(Transport &transport) const;
-  std::expected<std::string, int> wait_for_prompt(Transport &transport, const std::regex &pattern) const;
-  std::expected<std::string, int> wait_for_prompt(Transport &transport, const std::string &pattern) const;
+  std::expected<std::string, int> wait_for_prompt(Transport &transport, const std::regex &pattern, bool printOutput = false) const;
+  std::expected<std::string, int> wait_for_prompt(Transport &transport, const std::string &pattern, bool printOutput = false) const;
   virtual std::optional<std::string> apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const;
   static std::expected<std::unique_ptr<Strategy>, std::string> create_from_cliargs(const CliParser &cliparser);
 };
