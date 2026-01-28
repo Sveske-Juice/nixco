@@ -34,6 +34,37 @@
             });
             default = {};
           };
+          http = lib.mkOption {
+            default = {};
+            type = lib.types.submodule (_: {
+              options.secureServer = lib.mkOption {
+                description = "HTTPS configuration server";
+                default = {};
+                type = lib.types.submodule (_: {
+                  options = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = true;
+                    };
+                    # TODO: other settings
+                  };
+                });
+              };
+              options.server = lib.mkOption {
+                description = "HTTP configuration server";
+                default = {};
+                type = lib.types.submodule (_: {
+                  options = {
+                    enable = lib.mkOption {
+                      type = lib.types.bool;
+                      default = true;
+                    };
+                    # TODO: other settings
+                  };
+                });
+              };
+            });
+          };
         };
       });
       default = {};
