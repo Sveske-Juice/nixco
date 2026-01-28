@@ -104,6 +104,17 @@
         type = lib.types.nullOr switchPortType;
         default = null;
       };
+      encapsulation = lib.mkOption {
+        description = "802.1Q encapsulation";
+        type = lib.types.nullOr (lib.types.submodule (_: {
+          options = {
+            vlanId = lib.mkOption {
+              type = lib.types.int;
+            };
+          };
+        }));
+        default = null;
+      };
       accessGroup = lib.mkOption {
         type = lib.types.nullOr (lib.types.submodule (_: {
           options = {

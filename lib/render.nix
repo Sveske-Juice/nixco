@@ -57,6 +57,7 @@
         else "interface ${ifname}\n"
       )
       + lib.optionalString (value.description != null) "description \"${value.description}\"\n"
+      + lib.optionalString (value.encapsulation != null) "encapsulation dot1q ${toString value.encapsulation.vlanId}\n"
       + (
         if value.switchport != null
         then renderSwitchport lib value

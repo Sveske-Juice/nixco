@@ -39,6 +39,10 @@ in {
         vlans;
 
       interfaces = {
+        "g1/0/1.99" = {
+          shutdown = false;
+          encapsulation.vlanId = 99;
+        };
         "g1/0/1-24,g1/1/1-4" = {
           shutdown = true;
           description = "Admin Shutdown";
