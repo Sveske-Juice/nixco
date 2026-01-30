@@ -250,30 +250,18 @@ std::string escape_tcl_line(const std::string &line) {
     return out;
 }
 
-std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
-  auto mode = get_to_mode(transport, PEXEC, print);
+std::optional<std::string> Strategy::uploadFile(Transport &transport, const std::string &file, std::string path) const {
+  auto mode = get_to_mode(transport, PEXEC, true);
   if (!mode) return mode.error();
 
-  spdlog::info("Sucess! We are in PEXEC Mode");
-  spdlog::info("Entering TCL Scripting");
-
-  // Initial TCL setup to write bootstrap script
   auto err = transport.write("tclsh\n");
-  if (err) return err;
-  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
-  if (!prompt) return "Failed to get into TCL prompt";
+  err = transport.write(fmt::format("set filename \"{:s}\"\n", path));
+  err = transport.write("set f [ open $filename w]\n");
 
-  err = transport.write("set filename \"flash:bootstrap.cfg\"\n");
-  if (err) return err;
-  err = transport.write("set f [open $filename w]\n");
-  if (err) return err;
-
-  spdlog::info("Writing config into boostrap script");
-  std::string cmd;
-  std::istringstream stream(config);
-  while (std::getline(stream, cmd)) {
-    err = transport.write(fmt::format("puts $f \"{:s}\"\n", escape_tcl_line(cmd)));
-    if (err) return err;
+  std::string line;
+  std::istringstream stream(file);
+  while (std::getline(stream, line)) {
+    err = transport.write(fmt::format("puts $f \"{:s}\"\n", escape_tcl_line(line)));
   }
 
   err = transport.write("close $f\n");
@@ -281,22 +269,33 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   err = transport.write("tclquit\n");
   if (err) return err;
 
-  prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), print);
+  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), true);
   if (!prompt) return "Failed to return from TCL to PEXEC";
+
+  return std::nullopt;
+}
+
+std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
+  auto mode = get_to_mode(transport, PEXEC, print);
+  if (!mode) return mode.error();
+
+  spdlog::info("Sucess! We are in PEXEC Mode");
+  spdlog::info("Entering TCL Scripting");
+
+  // Upload config to flash
+  auto err = uploadFile(transport, config, "flash:nixco.cfg");
+  if (err) return err;
 
 
   spdlog::info("Erasing startup-config");
   err = transport.write("wr erase\n");
   if (err) return err;
 
-  prompt = wait_for_prompt(transport, "[confirm]", print);
+  auto prompt = wait_for_prompt(transport, "[confirm]", print);
   if (!prompt) return "err";
 
   err = transport.write("\n");
   if (err) return err;
-
-
-  spdlog::info("Config written. Copying to startup-config...");
 
   err = transport.write("copy flash:bootstrap.cfg startup-config\n\n");
   if (err) return err;
