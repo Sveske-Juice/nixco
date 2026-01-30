@@ -18,6 +18,7 @@
       + (toString route.distance);
     renderSwitchport = lib: value:
       ''
+        switchport
         switchport mode ${value.switchport.mode}
       ''
       + lib.optionalString (!value.switchport.negotiate) "switchport nonegotiate\n"
@@ -236,11 +237,9 @@
         default interface ${int}
       '')
       device.deviceSpec.interfaces)
-    + lib.concatMapAttrsStringSep "\n" (
-      ifname: value:
-        renderInterface lib ifname value
-    )
-    device.interfaces
+    + lib.concatStringsSep "\n" (map (value:
+        renderInterface lib value.name value.value
+    ) (builtins.sort (a: b: a.value.priority < b.value.priority) (map (name: { inherit name; value = device.interfaces.${name}; }) (builtins.attrNames device.interfaces))))
     + mkTitle "Routing"
     + mkSubTitle "Static Routes"
     + builtins.concatStringsSep "\n" (builtins.map (

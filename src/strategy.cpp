@@ -284,6 +284,18 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), print);
   if (!prompt) return "Failed to return from TCL to PEXEC";
 
+
+  spdlog::info("Erasing startup-config");
+  err = transport.write("wr erase\n");
+  if (err) return err;
+
+  prompt = wait_for_prompt(transport, "[confirm]", print);
+  if (!prompt) return "err";
+
+  err = transport.write("\n");
+  if (err) return err;
+
+
   spdlog::info("Config written. Copying to startup-config...");
 
   err = transport.write("copy flash:bootstrap.cfg startup-config\n\n");
@@ -301,6 +313,13 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
     // Should return to prompt after copying into running-config
     prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
     if (!prompt) return "Failed to return to prompt after copying to running-config";
+
+    spdlog::info("Writing running-config to startup-config");
+    err = transport.write("write memory\n");
+    if (err) return err;
+
+    err = transport.write("terminal length 0\nshow run\n");
+    if (err) return err;
   }
 
   return std::nullopt;

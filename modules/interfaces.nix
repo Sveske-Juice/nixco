@@ -89,6 +89,16 @@
   });
   interfaceType = lib.types.submodule (_: {
     options = {
+      priority = lib.mkOption {
+        type = lib.types.int;
+        default = 100;
+        description = 
+        ''
+        The order which interfaces gets rendered.
+        The higher the priority the later it will be rendered.
+        0 will be rendered first
+        '';
+      };
       description = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
