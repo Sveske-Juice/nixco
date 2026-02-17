@@ -40,6 +40,7 @@ protected:
   bool looks_like_prompt(const std::string &buffer, const std::regex &prompt) const;
   std::expected<MODE, std::string> get_to_mode(Transport &transport, MODE mode, bool print) const;
   std::optional<std::string> uploadFile(Transport &transport, const std::string &file, std::string path) const;
+  std::optional<std::string> deleteFile(Transport &transport, const std::string &path) const;
 public:
   virtual ~Strategy() = default;
   std::optional<std::string> reload_device(Transport &transport) const;

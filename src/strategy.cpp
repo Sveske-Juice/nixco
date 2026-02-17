@@ -70,8 +70,10 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport &transport, 
     if (printOutput)
       std::cout << chunk.value();
 
-    if (buf.contains(pattern))
+    if (buf.contains(pattern)) {
+      std::cout << std::endl;
       return buf;
+    }
   }
 
   return std::unexpected<int>(-1);
@@ -250,6 +252,25 @@ std::string escape_tcl_line(const std::string &line) {
     return out;
 }
 
+std::optional<std::string> Strategy::deleteFile(Transport &transport, const std::string &path) const {
+  auto mode = get_to_mode(transport, PEXEC, true);
+  if (!mode) return mode.error();
+
+  auto err = transport.write(fmt::format("delete {:s}\n", path));
+  if (err) return err;
+
+  auto prompt = wait_for_prompt(transport, "]?", true);
+  if (!prompt) return fmt::format("Failed to delete file: {:s}", path);
+
+  err = transport.write("\n\n"); // Double confirmation
+  if (err) return err;
+
+  prompt = wait_for_prompt(transport, std::regex(modePatterns[PEXEC]), true);
+  if (!prompt) return "Failed to return to PEXEC";
+
+  return std::nullopt;
+}
+
 std::optional<std::string> Strategy::uploadFile(Transport &transport, const std::string &file, std::string path) const {
   auto mode = get_to_mode(transport, PEXEC, true);
   if (!mode) return mode.error();
@@ -298,6 +319,9 @@ std::optional<std::string> TclStartStrategy::apply(Transport &transport, const C
 
   err = transport.write("copy flash:nixco.cfg startup-config\n\n");
   if (err) return err;
+
+  spdlog::info("Purging flash:vlan.dat");
+  deleteFile(transport, "flash:vlan.dat");
 
   // Should return to prompt after copying
   prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
