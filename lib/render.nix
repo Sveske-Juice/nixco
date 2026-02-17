@@ -1,5 +1,29 @@
 {
   render = {lib, ...}: device: let
+    sysloglevel = "critical";
+    renderPCEEM = pcInterfaces: let
+      interfaceConfigs = builtins.concatStringsSep "\n" (lib.mapAttrsToList (
+        intname: intvalue: renderInterface lib intname intvalue)
+      pcInterfaces);
+      lines = builtins.filter (l: l != "") (lib.splitString "\n" interfaceConfigs);
+    in ''
+      event manager applet FIX_PC
+      event syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120
+      action 0.1 syslog priority ${sysloglevel} msg "NIXCO: RUNNING PORT-CHANNEL FIX EEM AFTER 30s"
+      action 0.2 wait 30
+      action 0.3 cli command "enable"
+      action 0.4 cli command "configure terminal"
+      ! Self-destruction
+      action 0.5 cli command "no event manager applet FIX_PC"
+    ''
+    +
+    builtins.concatStringsSep "\n" (lib.lists.imap1 (i: line: ''action 1.${toString i} cli command "${line}"'') lines)
+    +
+    "\n"
+    +
+    ''
+    action 2.1 syslog priority ${sysloglevel} msg "NIXCO: DONE WITH FIXING PORT CHANNELS"
+    '';
     renderRoute = lib: route:
       (
         if route.ipv6
@@ -57,7 +81,7 @@
         then "interface range ${ifname}\n"
         else "interface ${ifname}\n"
       )
-      + lib.optionalString (value.description != null) "description \"${value.description}\"\n"
+      + lib.optionalString (value.description != null) "description ${value.description}\n"
       + lib.optionalString (value.encapsulation != null) "encapsulation dot1q ${toString value.encapsulation.vlanId}\n"
       + (
         if value.switchport != null
@@ -204,9 +228,14 @@
         then "ip http secure-server\n"
         else "no ip http secure-server\n"
       );
+    allPortChannels = interfaces: lib.attrsets.filterAttrs (name: value: value.portChannel == true) interfaces;
   in
     mkSubTitle "Pre config"
     + device.extraPreConfig
+    +
+    ''
+    vtp mode transparent
+    ''
     + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + mkTitle "Banners"
     + ''
@@ -250,5 +279,13 @@
     + lib.optionalString ((builtins.stringLength device.extraPostConfig) != 0) ''
       ${mkSubTitle "Post Config"}
       ${device.extraPostConfig}
+    ''
+    +
+    mkSubTitle "Render Port Channel EEM delay init applet"
+    +
+    renderPCEEM (allPortChannels device.interfaces)
+    +
+    ''
+    end
     '';
 }

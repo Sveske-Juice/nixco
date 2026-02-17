@@ -286,7 +286,6 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   auto err = uploadFile(transport, config, "flash:nixco.cfg");
   if (err) return err;
 
-
   spdlog::info("Erasing startup-config");
   err = transport.write("wr erase\n");
   if (err) return err;
@@ -297,7 +296,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   err = transport.write("\n");
   if (err) return err;
 
-  err = transport.write("copy flash:bootstrap.cfg startup-config\n\n");
+  err = transport.write("copy flash:nixco.cfg startup-config\n\n");
   if (err) return err;
 
   // Should return to prompt after copying
@@ -305,7 +304,7 @@ std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const 
   if (!prompt) return "Failed to return to prompt after copying to running-config";
 
   if (cliparser.cmdOptionExists("--replace")) {
-    err = transport.write("copy flash:bootstrap.cfg running-config\n\n");
+    err = transport.write("copy flash:nixco.cfg running-config\n\n");
     if (err) return err;
     spdlog::info("Copying config to running-config...");
 
@@ -328,12 +327,10 @@ std::optional<std::string> Strategy::reload_device(Transport &transport) const {
   auto err = transport.write("reload\n\n");
   if (err) return err;
 
-  auto prompt = wait_for_prompt(transport, "System configuration has been modified", true);
-  if (!prompt) return err;
   err = transport.write("n\n");
   if (err) return err;
 
-  prompt = wait_for_prompt(transport, "Proceed with reload", true);
+  auto prompt = wait_for_prompt(transport, "Proceed with reload", true);
   if (!prompt) return err;
   err = transport.write("\n");
   if (err) return err;

@@ -114,6 +114,11 @@
         type = lib.types.nullOr switchPortType;
         default = null;
       };
+      portChannel = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Required to be true for port channels, so we can add this interface for the delayed port channel EEM applet";
+      };
       encapsulation = lib.mkOption {
         description = "802.1Q encapsulation";
         type = lib.types.nullOr (lib.types.submodule (_: {
