@@ -49,7 +49,7 @@ public:
   static std::expected<std::unique_ptr<Strategy>, std::string> create_from_cliargs(const CliParser &cliparser);
 };
 
-class TclReloadStrategy : public Strategy {
+class TclStartStrategy : public Strategy {
 public:
   std::optional<std::string> apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const override;
 };

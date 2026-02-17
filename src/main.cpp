@@ -46,14 +46,20 @@ void printUsage() {
   Serial Transport Options:
     TODO: impl
 
-  runcmds Strategy Options:
+  runcmds Strategy:
+    Runs the commands in the configuration one-by-one
+
+    Options:
     TODO: --write
 
-  tclreload Stragety Options:
-    --replace             optional. Will replace the config into running-config
+  tclstart Stragety:
+    Uploads the configuration into the device's startup-config
+
+    Options:
+    --replace             TODO
 
   Strategy:
-    -s, --strategy { runcmds | tclreload } optional (default: runcmds)
+    -s, --strategy { tclstart | runcmds } optional (default: tclstart)
 
   General:
     -f, --file            The configuration file to apply

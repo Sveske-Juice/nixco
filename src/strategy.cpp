@@ -175,8 +175,8 @@ std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_clia
   if (strategy == "runcmds") {
     return std::make_unique<Strategy>();
   }
-  else if (strategy == "tclreload") {
-    return std::make_unique<TclReloadStrategy>();
+  else if (strategy == "tclstart") {
+    return std::make_unique<TclStartStrategy>();
   }
 
   return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
@@ -275,7 +275,7 @@ std::optional<std::string> Strategy::uploadFile(Transport &transport, const std:
   return std::nullopt;
 }
 
-std::optional<std::string> TclReloadStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
+std::optional<std::string> TclStartStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
   auto mode = get_to_mode(transport, PEXEC, print);
   if (!mode) return mode.error();
 
