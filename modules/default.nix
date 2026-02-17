@@ -10,6 +10,7 @@
       ./routing.nix
       ./vlan.nix
       ./assertions.nix
+      ./keys.nix
     ];
     options = {
       extraPreConfig = lib.mkOption {

@@ -24,6 +24,30 @@
     ''
     action 2.1 syslog priority ${sysloglevel} msg "NIXCO: DONE WITH FIXING PORT CHANNELS"
     '';
+    renderKeyCmd = key:
+    "crypto key generate ${key.type} "
+    +
+    (if key.type == "rsa" then
+      "modulus ${toString key.rsaOpts.modulus} "
+      +
+      lib.optionalString (key.rsaOpts.label != null) "label ${key.rsaOpts.label} "
+    else # ec
+      "keysize ${toString key.ecOpts.keysize} "
+    );
+    renderKeyEEM = idx: key: let
+      keyCmd = renderKeyCmd key;
+      appletName = "SSH_KEY_GEN_${toString idx}";
+    in ''
+      event manager applet ${appletName}
+      event syslog pattern "SYS-5-RESTART" occurs 1 maxrun 60
+      action 1 wait 10
+      action 2 cli command "enable"
+      action 3 cli command "configure terminal"
+      ! Self-destruction
+      action 4 cli command "no event manager applet ${appletName}"
+      action 5 cli command "end"
+      action 6 cli command "${keyCmd}"
+    '';
     renderRoute = lib: route:
       (
         if route.ipv6
@@ -281,9 +305,13 @@
       ${device.extraPostConfig}
     ''
     +
-    mkSubTitle "Render Port Channel EEM delay init applet"
+    mkSubTitle "Render Port channel fix EEM Applet"
     +
     renderPCEEM (allPortChannels device.interfaces)
+    +
+    mkSubTitle "Render Key generators EEM Applets"
+    +
+    builtins.concatStringsSep "\n" (lib.lists.imap0 (idx: key: renderKeyEEM idx key) device.keys)
     +
     ''
     end
