@@ -6,7 +6,7 @@
     # nixcoLib global functions
   };
 
-  renderConfig = import ./render.nix;
+  renderConfig = import ./renderer { inherit lib; };
 in {
   eval = files: let
     result = lib.evalModules {
@@ -42,7 +42,7 @@ in {
 
       ${lib.concatStringsSep "\n" (
         lib.mapAttrsToList (deviceName: value: let
-          config = renderConfig.render {inherit lib;} value;
+          config = renderConfig.render value;
         in ''
           cp ${pkgs.writeText "test" config} "$out/${deviceName}.txt"
         '')
