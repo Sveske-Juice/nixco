@@ -101,7 +101,7 @@
     renderInterface = lib: ifname: value:
       mkSubTitle "Interface ${ifname}"
       + (
-        if isRange ifname
+        if value.range
         then "interface range ${ifname}\n"
         else "interface ${ifname}\n"
       )
@@ -146,8 +146,6 @@
       + (if value.shutdown then "shutdown\n" else "no shutdown\n")
     ;
 
-    isRange = key:
-      builtins.match ".*[-,].*" key != null;
     mkSubTitle = title: lib.optionalString device.comments "!==== ${title} ====!\n";
     mkTitle = title:
       lib.optionalString device.comments ''

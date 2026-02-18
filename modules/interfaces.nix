@@ -114,6 +114,10 @@
         type = lib.types.nullOr switchPortType;
         default = null;
       };
+      range = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+      };
       portChannel = lib.mkOption {
         type = lib.types.bool;
         default = false;
