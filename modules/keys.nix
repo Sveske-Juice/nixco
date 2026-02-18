@@ -1,4 +1,4 @@
-{lib, ...}: let
+{lib, config, ...}: let
   ecOpts = lib.types.submodule (_: {
     options = {
       keysize = lib.mkOption {
@@ -40,4 +40,21 @@ in {
       type = lib.types.listOf keyType;
     };
   };
+
+  config.assertions = [
+    {
+      assertion = lib.lists.all (key:
+        if key.type != "rsa"
+        then true
+        else if key.rsaOpts.label != null
+        then true
+        # If no label specified, domain name must be set
+        else config.ip.domainName != null) config.keys;
+      message = ''
+        Key with no label specified but no domain name has been set.
+        Either set a domain name with `ip.domainName` or set a custom label
+        for the key.
+      '';
+    }
+  ];
 }
