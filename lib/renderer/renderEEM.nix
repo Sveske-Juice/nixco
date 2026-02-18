@@ -13,10 +13,9 @@
     +
     # Render actions
     (builtins.concatStringsSep "\n" (map (action: 
-      ''
-      action ${action.label} ${action.actionStr}
-      ''
+      ''action ${action.label} ${action.actionStr}''
     ) applet.actions))
+    +"\n"
     ;
 in
   # Render all applets
