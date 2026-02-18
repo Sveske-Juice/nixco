@@ -139,9 +139,9 @@ in {
             label = "0.4";
             actionStr = ''cli command "no event manager applet FIX_PORTCHANNELS"'';
           }
-        ] ++ lib.lists.imap1 (idx: line:
+        ] ++ lib.lists.imap0 (idx: line:
             {
-              label = toString idx;
+              label = "20.${lib.fixedWidthString 3 "0" (toString idx)}";
               actionStr = ''cli command "${line}"'';
             }
           ) lines;
