@@ -323,10 +323,6 @@ std::optional<std::string> TclStartStrategy::apply(Transport &transport, const C
   spdlog::info("Purging flash:vlan.dat");
   deleteFile(transport, "flash:vlan.dat");
 
-  // Should return to prompt after copying
-  prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
-  if (!prompt) return "Failed to return to prompt after copying to running-config";
-
   if (cliparser.cmdOptionExists("--replace")) {
     err = transport.write("copy flash:nixco.cfg running-config\n\n");
     if (err) return err;
