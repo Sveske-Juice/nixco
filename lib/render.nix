@@ -1,6 +1,34 @@
 {
   render = {lib, ...}: device: let
     sysloglevel = "critical";
+
+    renderEEMApplet = label: applet: ''
+      event manager applet ${label}
+    ''
+    +
+    lib.optionalString (applet.description != null) "description ${applet.description}\n"
+    +
+    # Render event
+    ''
+      event ${applet.event.eventStr}
+    ''
+    +
+    # Render actions
+    (builtins.concatStringsSep "\n" (map (action: 
+      ''
+      action ${action.label} ${action.actionStr}
+      ''
+    ) applet.actions))
+    ;
+
+    renderEEM = eem:
+    # Render all applets
+    builtins.concatStringsSep "\n" 
+      (lib.attrsets.mapAttrsToList
+        (label: applet: renderEEMApplet label applet)
+      device.eem.applets
+    );
+
     renderPCEEM = pcInterfaces: let
       interfaceConfigs = builtins.concatStringsSep "\n" (lib.mapAttrsToList (
         intname: intvalue: renderInterface lib intname intvalue)
@@ -302,6 +330,10 @@
       ${mkSubTitle "Post Config"}
       ${device.extraPostConfig}
     ''
+    +
+    mkSubTitle "Render EEM"
+    +
+    renderEEM device.eem
     +
     mkSubTitle "Render Port channel fix EEM Applet"
     +

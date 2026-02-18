@@ -11,6 +11,7 @@
       ./vlan.nix
       ./assertions.nix
       ./keys.nix
+      ./eem.nix
     ];
     options = {
       extraPreConfig = lib.mkOption {
