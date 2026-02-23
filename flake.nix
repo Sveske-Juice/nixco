@@ -44,28 +44,32 @@
         renderAll = builtins.mapAttrs (_deviceName: value:
           pkgs.writeText "test" (nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} value))
         allDevices.config.devices;
-      in {
-        packages.default = pkgs.callPackage ./package.nix {};
-        checks = renderAll;
 
-        devShells.default = pkgs.mkShellNoCC {
-          packages = with pkgs; [
-            clang-tools
-            clang
-            pkg-config
-            ninja
-            meson
-            llvmPackages_latest.libstdcxxClang
-            llvmPackages_latest.libcxx
-            valgrind
-            just
-            gdb
-
+        minimalShell = pkgs.mkShell {
+          buildInputs = with pkgs; [
             libssh
             fmt
             spdlog
           ];
+          nativeBuildInputs = with pkgs; [
+            clang-tools
+            pkg-config
+            ninja
+            meson
+            just
+          ];
         };
+      in {
+        packages.default = pkgs.callPackage ./package.nix {};
+        checks = renderAll;
+
+        devShells.default = minimalShell;
+        devShells.full = minimalShell.overrideAttrs (old: {
+          nativeBuildInputs = with pkgs; old.nativeBuildInputs ++ [
+            valgrind
+            gdb
+          ];
+        });
       };
     });
 }
