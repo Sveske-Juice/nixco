@@ -41,8 +41,8 @@
       perSystem = {pkgs, ...}: let
         examples = inputs.nixpkgs.lib.fileset.toList (inputs.nixpkgs.lib.fileset.fileFilter (file: file.hasExt "nix") ./examples);
         allDevices = nixcoLib.eval examples;
-        renderAll = builtins.mapAttrs (_deviceName: value:
-          pkgs.writeText "test" (nixcoLib.renderConfig.render {inherit (inputs.nixpkgs) lib;} value))
+        renderAll = builtins.mapAttrs (_: value:
+          pkgs.writeText "nixcocfg" (nixcoLib.renderConfig.render value))
         allDevices.config.devices;
 
         minimalShell = pkgs.mkShell {

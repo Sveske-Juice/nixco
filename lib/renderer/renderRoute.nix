@@ -13,4 +13,4 @@
 + " "
 + (lib.optionalString (route.exitInterface != null) "${route.exitInterface} ")
 + (lib.optionalString (route.nextHop != null) "${route.nextHop} ")
-+ (toString route.distance);
++ (toString route.distance)
