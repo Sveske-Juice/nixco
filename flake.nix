@@ -42,7 +42,7 @@
         examples = inputs.nixpkgs.lib.fileset.toList (inputs.nixpkgs.lib.fileset.fileFilter (file: file.hasExt "nix") ./examples);
         allDevices = nixcoLib.eval examples;
         renderAll = builtins.mapAttrs (_: value:
-          pkgs.writeText "nixcocfg" (nixcoLib.renderConfig.render value))
+          pkgs.writeText "nixcocfg" (nixcoLib.renderer.render value))
         allDevices.config.devices;
 
         minimalShell = pkgs.mkShell {

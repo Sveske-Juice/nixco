@@ -1,19 +1,12 @@
-{lib}: let
-  # Exposed nixcoLib types, functions etc.
-  nixcoLib = {
-    types = import ./types.nix lib;
+{lib}: rec {
+  types = import ./types.nix lib;
+  renderer = import ./renderer { inherit lib; };
 
-    # nixcoLib global functions
-  };
-
-  renderConfig = import ./renderer { inherit lib; };
-in {
   eval = files: let
     result = lib.evalModules {
       modules = [../modules] ++ files;
       specialArgs = {
         inherit lib;
-        inherit nixcoLib;
       };
     };
 
@@ -35,16 +28,15 @@ in {
         "Device module assertion failed:\n"
         + builtins.concatStringsSep "\n" (map (a: "- " + a.message) failedAssertions)
       );
-  inherit renderConfig;
   renderAllDevices = pkgs: devices:
     pkgs.runCommand "render-devices" {} ''
       mkdir -p $out
 
       ${lib.concatStringsSep "\n" (
         lib.mapAttrsToList (deviceName: value: let
-          config = renderConfig.render value;
+          config = renderer.render value;
         in ''
-          cp ${pkgs.writeText "test" config} "$out/${deviceName}.txt"
+          cp ${pkgs.writeText "nixcocfg" config} "$out/${deviceName}.txt"
         '')
         devices
       )}

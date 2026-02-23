@@ -1,5 +1,5 @@
 {lib, config, ...}: let
-  renderConfig = import ../lib/renderer { inherit lib; };
+  renderer = import ../lib/renderer { inherit lib; };
   actionType = lib.types.submodule (_: {
     options = {
       label = lib.mkOption {
@@ -116,7 +116,7 @@ in {
       "FIX_PORTCHANNELS" = let
         pcInterfaces = lib.attrsets.filterAttrs (_: value: value.portChannel == true) config.interfaces;
         renderedPCInts = builtins.concatStringsSep "\n" (lib.mapAttrsToList (intname: intvalue:
-          renderConfig.renderInterface config intname intvalue
+          renderer.renderInterface config intname intvalue
         ) pcInterfaces);
         lines = builtins.filter (l: l != "") (lib.splitString "\n" renderedPCInts);
       in {
