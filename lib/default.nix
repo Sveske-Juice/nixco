@@ -1,6 +1,6 @@
 {lib}: rec {
   types = import ./types.nix lib;
-  renderer = import ./renderer { inherit lib; };
+  renderer = import ./renderer {inherit lib;};
 
   eval = files: let
     result = lib.evalModules {

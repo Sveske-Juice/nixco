@@ -1,5 +1,9 @@
-{lib, config, ...}: let
-  renderer = import ../lib/renderer { inherit lib; };
+{
+  lib,
+  config,
+  ...
+}: let
+  renderer = import ../lib/renderer {inherit lib;};
   actionType = lib.types.submodule (_: {
     options = {
       label = lib.mkOption {
@@ -82,7 +86,7 @@
       };
     };
   });
-  appletType = lib.types.submodule (appletName: {
+  appletType = lib.types.submodule (_appletName: {
     options = {
       description = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
@@ -114,86 +118,93 @@ in {
     # FIX_PORTCHANNELS EEM Intial boot applet
     fixportChannels = {
       "FIX_PORTCHANNELS" = let
-        pcInterfaces = lib.attrsets.filterAttrs (_: value: value.portChannel == true) config.interfaces;
-        renderedPCInts = builtins.concatStringsSep "\n" (lib.mapAttrsToList (intname: intvalue:
-          renderer.renderInterface config intname intvalue
-        ) pcInterfaces);
+        pcInterfaces = lib.attrsets.filterAttrs (_: value: value.portChannel) config.interfaces;
+        renderedPCInts = builtins.concatStringsSep "\n" (lib.mapAttrsToList (
+            intname: intvalue:
+              renderer.renderInterface config intname intvalue
+          )
+          pcInterfaces);
         lines = builtins.filter (l: l != "") (lib.splitString "\n" renderedPCInts);
       in {
         event.eventStr = ''syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120'';
-        actions = [
-          {
-            label = "0.1";
-            actionStr = "wait 30";
-          }
-          {
-            label = "0.2";
-            actionStr = ''cli command "enable"'';
-          }
-          {
-            label = "0.3";
-            actionStr = ''cli command "configure terminal"'';
-          }
-          # Self destruct
-          {
-            label = "0.4";
-            actionStr = ''cli command "no event manager applet FIX_PORTCHANNELS"'';
-          }
-        ] ++ lib.lists.imap0 (idx: line:
+        actions =
+          [
             {
+              label = "0.1";
+              actionStr = "wait 30";
+            }
+            {
+              label = "0.2";
+              actionStr = ''cli command "enable"'';
+            }
+            {
+              label = "0.3";
+              actionStr = ''cli command "configure terminal"'';
+            }
+            # Self destruct
+            {
+              label = "0.4";
+              actionStr = ''cli command "no event manager applet FIX_PORTCHANNELS"'';
+            }
+          ]
+          ++ lib.lists.imap0 (
+            idx: line: {
               label = "20.${lib.fixedWidthString 3 "0" (toString idx)}";
               actionStr = ''cli command "${line}"'';
             }
-          ) lines;
+          )
+          lines;
       };
     };
     # EEM Applets for generating keys at inital boot
     genkeys = let
       renderKeyCmd = key:
         "crypto key generate ${key.type} "
-        +
-        (if key.type == "rsa" then
-          "modulus ${toString key.rsaOpts.modulus} "
-          +
-          lib.optionalString (key.rsaOpts.label != null) "label ${key.rsaOpts.label} "
-        else # ec
-          "keysize ${toString key.ecOpts.keysize} "
+        + (
+          if key.type == "rsa"
+          then
+            "modulus ${toString key.rsaOpts.modulus} "
+            + lib.optionalString (key.rsaOpts.label != null) "label ${key.rsaOpts.label} "
+          else # ec
+            "keysize ${toString key.ecOpts.keysize} "
         );
-    in lib.listToAttrs (lib.lists.imap0 (idx: key:
-        {
-          name = "GEN_KEY_${toString idx}";
-          value = {
-            event.eventStr = ''syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120'';
-            actions = [
-              {
-                label = "0.1";
-                actionStr = "wait 10";
-              }
-              {
-                label = "0.2";
-                actionStr = ''cli command "enable"'';
-              }
-              {
-                label = "0.3";
-                actionStr = ''cli command "configure terminal"'';
-              }
-              # Self destruct
-              {
-                label = "0.4";
-                actionStr = ''cli command "no event manager applet GEN_KEY_${toString idx}"'';
-              }
-              {
-                label = "0.5";
-                actionStr = ''cli command "end"'';
-              }
-              {
-                label = "1";
-                actionStr = ''cli command "${renderKeyCmd key}"'';
-              }
-            ];
-          };
-        }
-      ) config.keys);
+    in
+      lib.listToAttrs (lib.lists.imap0 (
+          idx: key: {
+            name = "GEN_KEY_${toString idx}";
+            value = {
+              event.eventStr = ''syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120'';
+              actions = [
+                {
+                  label = "0.1";
+                  actionStr = "wait 10";
+                }
+                {
+                  label = "0.2";
+                  actionStr = ''cli command "enable"'';
+                }
+                {
+                  label = "0.3";
+                  actionStr = ''cli command "configure terminal"'';
+                }
+                # Self destruct
+                {
+                  label = "0.4";
+                  actionStr = ''cli command "no event manager applet GEN_KEY_${toString idx}"'';
+                }
+                {
+                  label = "0.5";
+                  actionStr = ''cli command "end"'';
+                }
+                {
+                  label = "1";
+                  actionStr = ''cli command "${renderKeyCmd key}"'';
+                }
+              ];
+            };
+          }
+        )
+        config.keys);
   in
     fixportChannels // genkeys;
 

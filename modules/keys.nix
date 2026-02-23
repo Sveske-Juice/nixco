@@ -1,8 +1,12 @@
-{lib, config, ...}: let
+{
+  lib,
+  config,
+  ...
+}: let
   ecOpts = lib.types.submodule (_: {
     options = {
       keysize = lib.mkOption {
-        type = lib.types.enum [ 256 384 521 ];
+        type = lib.types.enum [256 384 521];
         default = 256;
       };
     };
@@ -21,9 +25,9 @@
     };
   });
   keyType = lib.types.submodule (_: {
-    options ={
+    options = {
       type = lib.mkOption {
-        type = lib.types.enum [ "ec" "rsa" ];
+        type = lib.types.enum ["ec" "rsa"];
       };
       rsaOpts = lib.mkOption {
         type = rsaOpts;
@@ -49,7 +53,8 @@ in {
         else if key.rsaOpts.label != null
         then true
         # If no label specified, domain name must be set
-        else config.ip.domainName != null) config.keys;
+        else config.ip.domainName != null)
+      config.keys;
       message = ''
         Key with no label specified but no domain name has been set.
         Either set a domain name with `ip.domainName` or set a custom label

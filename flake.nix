@@ -65,10 +65,12 @@
 
         devShells.default = minimalShell;
         devShells.full = minimalShell.overrideAttrs (old: {
-          nativeBuildInputs = with pkgs; old.nativeBuildInputs ++ [
-            valgrind
-            gdb
-          ];
+          nativeBuildInputs = with pkgs;
+            old.nativeBuildInputs
+            ++ [
+              valgrind
+              gdb
+            ];
         });
       };
     });
