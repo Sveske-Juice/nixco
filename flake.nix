@@ -11,67 +11,73 @@
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs @ {flake-parts, ...}:
-    flake-parts.lib.mkFlake {inherit inputs;} (_: let
-      nixcoLib = import ./lib {inherit (inputs.nixpkgs) lib;};
-    in {
-      imports = [
-        ./treefmt.nix
-      ];
-      flake = {
-        # Expose nixcoLib from flake
-        inherit nixcoLib;
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake
+    {inherit inputs;}
+    (inputs.import-tree ./nix);
 
-        templates = {
-          default = {
-            path = ./templates/default;
-            description = "Nixco single device template";
-            welcomeText = ''
-              This template contains a flake.nix which contains
-              a default package output, which when built, renders
-              your device's config (device.nix):
-              $ nix build .#
-            '';
-          };
-        };
-      };
 
-      systems = inputs.nixpkgs.lib.systems.flakeExposed;
-
-      perSystem = {pkgs, ...}: let
-        examples = inputs.nixpkgs.lib.fileset.toList (inputs.nixpkgs.lib.fileset.fileFilter (file: file.hasExt "nix") ./examples);
-        allDevices = nixcoLib.eval examples;
-        renderAll = builtins.mapAttrs (_: value:
-          pkgs.writeText "nixcocfg" (nixcoLib.renderer.render value))
-        allDevices.config.devices;
-
-        minimalShell = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            libssh
-            fmt
-            spdlog
-          ];
-          nativeBuildInputs = with pkgs; [
-            clang-tools
-            pkg-config
-            ninja
-            meson
-            just
-          ];
-        };
-      in {
-        packages.default = pkgs.callPackage ./package.nix {};
-        checks = renderAll;
-
-        devShells.default = minimalShell;
-        devShells.full = minimalShell.overrideAttrs (old: {
-          nativeBuildInputs = with pkgs;
-            old.nativeBuildInputs
-            ++ [
-              valgrind
-              gdb
-            ];
-        });
-      };
-    });
+  # outputs = inputs @ {flake-parts, ...}:
+  #   flake-parts.lib.mkFlake {inherit inputs;} (_: let
+  #     nixcoLib = import ./lib {inherit (inputs.nixpkgs) lib;};
+  #   in {
+  #     imports = [
+  #       ./treefmt.nix
+  #     ];
+  #     flake = {
+  #       # Expose nixcoLib from flake
+  #       inherit nixcoLib;
+  #
+  #       templates = {
+  #         default = {
+  #           path = ./templates/default;
+  #           description = "Nixco single device template";
+  #           welcomeText = ''
+  #             This template contains a flake.nix which contains
+  #             a default package output, which when built, renders
+  #             your device's config (device.nix):
+  #             $ nix build .#
+  #           '';
+  #         };
+  #       };
+  #     };
+  #
+  #     systems = inputs.nixpkgs.lib.systems.flakeExposed;
+  #
+  #     perSystem = {pkgs, ...}: let
+  #       examples = inputs.nixpkgs.lib.fileset.toList (inputs.nixpkgs.lib.fileset.fileFilter (file: file.hasExt "nix") ./examples);
+  #       allDevices = nixcoLib.eval examples;
+  #       renderAll = builtins.mapAttrs (_: value:
+  #         pkgs.writeText "nixcocfg" (nixcoLib.renderer.render value))
+  #       allDevices.config.devices;
+  #
+  #       minimalShell = pkgs.mkShell {
+  #         buildInputs = with pkgs; [
+  #           libssh
+  #           fmt
+  #           spdlog
+  #         ];
+  #         nativeBuildInputs = with pkgs; [
+  #           clang-tools
+  #           pkg-config
+  #           ninja
+  #           meson
+  #           just
+  #         ];
+  #       };
+  #     in {
+  #       packages.default = pkgs.callPackage ./package.nix {};
+  #       checks = renderAll;
+  #
+  #       devShells.default = minimalShell;
+  #       devShells.full = minimalShell.overrideAttrs (old: {
+  #         nativeBuildInputs = with pkgs;
+  #           old.nativeBuildInputs
+  #           ++ [
+  #             valgrind
+  #             gdb
+  #           ];
+  #       });
+  #     };
+  #   });
 }
