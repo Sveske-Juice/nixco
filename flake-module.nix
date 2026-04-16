@@ -9,7 +9,10 @@
         devices = lib.mkOption {
           type = lib.types.attrsOf (lib.types.submodule {
             imports = [
+              self.nixcoModules.misc
               self.nixcoModules.device
+              self.nixcoModules.ip
+              self.nixcoModules.ipv6
             ];
           });
           default = {};
