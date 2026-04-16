@@ -10,7 +10,7 @@ in {
             routing = lib.mkOption {
               type = lib.types.bool;
               default = false;
-            }; 
+            };
           };
         };
       };
