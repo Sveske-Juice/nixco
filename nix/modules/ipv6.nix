@@ -5,6 +5,7 @@ in {
     options = {
       ipv6 = lib.mkOption {
         description = "Global IPv6 Configuration";
+        default = {};
         type = lib.types.submodule {
           options = {
             routing = lib.mkOption {

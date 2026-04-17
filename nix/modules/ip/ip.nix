@@ -8,7 +8,11 @@ in {
   flake.nixcoModules.ip = {
     options.ip = lib.mkOption {
       description = "Global IP Configuration";
+      default = {};
       type = lib.types.submodule {
+        imports = [
+          self.nixcoModules.http
+        ];
         options = {
           routing = lib.mkOption {
             type = lib.types.bool;

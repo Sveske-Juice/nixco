@@ -117,7 +117,7 @@ in {
         pcInterfaces = lib.attrsets.filterAttrs (_: value: value.portChannel) config.interfaces;
         renderedPCInts = builtins.concatStringsSep "\n" (lib.mapAttrsToList (
           intname: intvalue:
-          self.lib.renderer.renderInterface config intname intvalue
+          self.lib.renderInterface config intname intvalue
         )
           pcInterfaces);
         lines = builtins.filter (l: l != "") (lib.splitString "\n" renderedPCInts);
