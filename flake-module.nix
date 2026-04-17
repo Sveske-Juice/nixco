@@ -12,6 +12,7 @@
               self.nixcoModules.misc
               self.nixcoModules.banner
               self.nixcoModules.device
+              self.nixcoModules.vlans
               self.nixcoModules.ip
               self.nixcoModules.ipv6
               self.nixcoModules.interfaces
