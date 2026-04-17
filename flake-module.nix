@@ -14,6 +14,7 @@
               self.nixcoModules.device
               self.nixcoModules.ip
               self.nixcoModules.ipv6
+              self.nixcoModules.interfaces
             ];
           });
           default = {};
