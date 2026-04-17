@@ -17,6 +17,7 @@
                 self.nixcoModules.eem
                 self.nixcoModules.keys
                 self.nixcoModules.routing
+                self.nixcoModules.acl
               ];
             });
             default = {};
