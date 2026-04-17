@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.nixpkgs) lib;
 in {
-  flake.nixcoModules.device = {
+  flake.nixcoModules.banner = {
     options = {
       motd = lib.mkOption {
         type = lib.types.lines;
