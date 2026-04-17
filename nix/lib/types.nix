@@ -4,6 +4,12 @@
   # TODO: 
   isValidNetmask = mask: true;
 in {
+  flake.lib.netmask2Wildcard = netmask:
+    let
+      octets = lib.splitString "." netmask;
+      invertOctet = o: toString (255 - lib.toInt o);
+    in
+      lib.concatStringsSep "." (map invertOctet octets);
   flake.lib.types = {
     ipv4 = lib.mkOptionType {
       name = "ipv4Address";

@@ -59,7 +59,7 @@ in {
     lib.optionalString (ifvalue.ip != null)
     (
       (lib.optionalString (ifvalue.ip.address != null && ifvalue.ip.address == "dhcp") "ip address dhcp\n")
-      + (lib.optionalString (ifvalue.ip.address != null && builtins.isAttrs ifvalue.ip.address) "ip address ${ifvalue.ip.address.address} ${ifvalue.ip.address.subnetmask}\n")
+      + (lib.optionalString (ifvalue.ip.address != null && builtins.isAttrs ifvalue.ip.address) "ip address ${ifvalue.ip.address.addr} ${ifvalue.ip.address.netmask}\n")
       + (lib.optionalString (ifvalue.ip.ipHelper != null) "ip helpher-address ${ifvalue.ip.ipHelper}\n")
     )
     +

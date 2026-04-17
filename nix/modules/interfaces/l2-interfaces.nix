@@ -6,13 +6,9 @@ in {
     options = {
       switchport = lib.mkOption {
         description = "Switchport settings";
-        default = {};
-        type = lib.types.submodule {
+        default = null;
+        type = lib.types.nullOr (lib.types.submodule {
           options = {
-            enable = lib.mkOption {
-              type = lib.types.bool;
-              default = false;
-            };
             mode = lib.mkOption {
               type = lib.types.nullOr (lib.types.enum [
                 "access"
@@ -61,8 +57,8 @@ in {
             # - protected
             # - voice
             portSecurity = lib.mkOption {
-              default = {};
-              type = lib.types.submodule {
+              default = null;
+              type = lib.types.nullOr (lib.types.submodule {
                 options = {
                   aging = lib.mkOption {
                     type = lib.types.nullOr (lib.types.submodule {
@@ -104,10 +100,10 @@ in {
                     default = "shutdown";
                   };
                 };
-              };
+              });
             };
           };
-        };
+        });
       };
       mac = lib.mkOption {
         default = {};

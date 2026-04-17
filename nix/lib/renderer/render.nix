@@ -33,8 +33,8 @@ in {
         '')
         device.vlans))
       + lib.optionalString ((builtins.length device.vlans) != 0) "exit\n"
-    #   + self.lib.mkTitle device "ACLs"
-    #   + self.lib.renderACLs device
+      + self.lib.mkTitle device "ACLs"
+      + self.lib.renderACLs device
       + self.lib.mkTitle device "IPv4 Settings"
       + self.lib.renderIpv4 device
       + self.lib.mkTitle device "Global IPv6 Settings"

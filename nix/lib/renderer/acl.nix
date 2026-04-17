@@ -23,7 +23,7 @@ in {
           ${rule.action} ${
           if rule.source == "any"
             then "any"
-          else "${rule.source.address} ${rule.source.wildcard}"
+          else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
         }
         ''
       )
@@ -47,17 +47,18 @@ in {
         + "${
         if rule.source == "any"
           then "any"
-        else "${rule.source.address} ${rule.source.wildcard}"
+        else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
       } "
         + "${
         if rule.destination == "any"
           then "any"
-        else "${rule.destination.address} ${rule.destination.wildcard}"
+        else "${rule.destination.addr} ${self.lib.netmask2Wildcard rule.destination.netmask}"
       } "
         + lib.optionalString (rule.op != null) "${rule.op} "
         + lib.optionalString rule.log "log"
       )
         acl.rules))
+        + "\n"
     )
       device.acl.extended));
 }
