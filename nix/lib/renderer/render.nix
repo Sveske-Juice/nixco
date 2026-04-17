@@ -52,21 +52,21 @@ in {
           inherit name;
           value = device.interfaces.${name};
         }) (builtins.attrNames device.interfaces))))
+    #   + self.lib.mkTitle device "Routing"
+    #   + self.lib.mkSubTitle device "Static Routes"
+    #   + builtins.concatStringsSep "\n" (map (
+    #       route:
+    #         self.lib.renderRoute route
+    #     )
+    #     device.routes)
+      + lib.optionalString ((builtins.stringLength device.extraPostConfig) != 0) ''
+        ${self.lib.mkSubTitle device "Post Config"}
+        ${device.extraPostConfig}
+      ''
+      + self.lib.mkSubTitle device "Render EEM"
+      + self.lib.renderEEM device.eem
+      + ''
+        end
+    ''
   ;
-  #   + self.lib.mkTitle device "Routing"
-  #   + self.lib.mkSubTitle device "Static Routes"
-  #   + builtins.concatStringsSep "\n" (map (
-  #       route:
-  #         self.lib.renderRoute route
-  #     )
-  #     device.routes)
-  #   + lib.optionalString ((builtins.stringLength device.extraPostConfig) != 0) ''
-  #     ${self.lib.mkSubTitle device "Post Config"}
-  #     ${device.extraPostConfig}
-  #   ''
-  #   + self.lib.mkSubTitle device "Render EEM"
-  #   + self.lib.renderEEM device.eem
-  #   + ''
-  #     end
-  #   '';
 }

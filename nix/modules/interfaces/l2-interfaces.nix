@@ -4,12 +4,7 @@
 in {
   flake.nixcoModules.l2-interface = {
     options = {
-      portChannel = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Required to be true for port channels, so we can add this interface for the delayed port channel EEM applet";
-      };
-      switchPort = lib.mkOption {
+      switchport = lib.mkOption {
         description = "Switchport settings";
         default = {};
         type = lib.types.submodule {

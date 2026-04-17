@@ -31,6 +31,24 @@ in {
               type = lib.types.nullOr self.lib.types.ipv4;
               default = null;
             };
+            accessGroup = lib.mkOption {
+              default = null;
+              type = lib.types.nullOr (lib.types.submodule {
+                options = {
+                  name = lib.mkOption {
+                    type = lib.types.nullOr lib.types.str;
+                    default = null;
+                  };
+                  id = lib.mkOption {
+                    type = lib.types.nullOr (lib.types.ints.between 1 2699);
+                    default = null;
+                  };
+                  interface = lib.mkOption {
+                    type = lib.types.enum ["in" "out"];
+                  };
+                };
+              });
+            };
           };
         };
       };

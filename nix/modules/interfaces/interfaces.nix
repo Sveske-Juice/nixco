@@ -49,8 +49,8 @@ in {
       };
       channelGroup = lib.mkOption {
         description = "Port/Ether-channels";
-        default = {};
-        type = lib.types.submodule {
+        default = null;
+        type = lib.types.nullOr (lib.types.submodule {
           options = {
             groupNumber = lib.mkOption {
               type = lib.types.int;
@@ -69,7 +69,7 @@ in {
               example = "on";
             };
           };
-        };
+        });
       };
     };
   };

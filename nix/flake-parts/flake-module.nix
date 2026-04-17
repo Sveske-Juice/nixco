@@ -15,6 +15,7 @@
                 self.nixcoModules.ipv6
                 self.nixcoModules.interfaces
                 self.nixcoModules.eem
+                self.nixcoModules.keys
               ];
             });
             default = {};
