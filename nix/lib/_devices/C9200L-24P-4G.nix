@@ -1,6 +1,7 @@
 {
   "C9200L-24P-4G" = {
     name = "C9200L-24P-4G";
+    deviceType = "switch";
     interfaces = [
       "GigabitEthernet0/0"
       "GigabitEthernet1/0/1"
