@@ -1,4 +1,8 @@
-{inputs, self, ...}: let
+{
+  inputs,
+  self,
+  ...
+}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.nixcoModules.l3-interface = {
@@ -96,4 +100,3 @@ in {
     };
   };
 }
-

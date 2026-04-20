@@ -1,5 +1,9 @@
 # Embedded Event Manager
-{inputs, self, ...}: let
+{
+  inputs,
+  self,
+  ...
+}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.nixcoModules.eem = {config, ...}: {
@@ -118,9 +122,9 @@ in {
       (let
         pcInterfaces = lib.attrsets.filterAttrs (_: value: value.portChannel) config.interfaces;
         renderedPCInts = builtins.concatStringsSep "\n" (lib.mapAttrsToList (
-          intname: intvalue:
-          self.lib.renderInterface config intname intvalue
-        )
+            intname: intvalue:
+              self.lib.renderInterface config intname intvalue
+          )
           pcInterfaces);
         lines = builtins.filter (l: l != "") (lib.splitString "\n" renderedPCInts);
         # FIX_PORTCHANNELS EEM Intial boot applet
@@ -161,48 +165,48 @@ in {
           "crypto key generate ${key.type} "
           + (
             if key.type == "rsa"
-              then
+            then
               "modulus ${toString key.rsaOpts.modulus} "
               + lib.optionalString (key.rsaOpts.label != null) "label ${key.rsaOpts.label} "
             else # ec
               "keysize ${toString key.ecOpts.keysize} "
           );
-      in 
+      in
         lib.listToAttrs (lib.lists.imap0 (
-          idx: key: {
-            name = "GEN_KEY_${toString idx}";
-            value = {
-              event.eventStr = ''syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120'';
-              actions = [
-                {
-                  label = "0.1";
-                  actionStr = "wait 10";
-                }
-                {
-                  label = "0.2";
-                  actionStr = ''cli command "enable"'';
-                }
-                {
-                  label = "0.3";
-                  actionStr = ''cli command "configure terminal"'';
-                }
-                # Self destruct
-                {
-                  label = "0.4";
-                  actionStr = ''cli command "no event manager applet GEN_KEY_${toString idx}"'';
-                }
-                {
-                  label = "0.5";
-                  actionStr = ''cli command "end"'';
-                }
-                {
-                  label = "1";
-                  actionStr = ''cli command "${renderKeyCmd key}"'';
-                }
-              ];
-            };
-          }
-        )
+            idx: key: {
+              name = "GEN_KEY_${toString idx}";
+              value = {
+                event.eventStr = ''syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120'';
+                actions = [
+                  {
+                    label = "0.1";
+                    actionStr = "wait 10";
+                  }
+                  {
+                    label = "0.2";
+                    actionStr = ''cli command "enable"'';
+                  }
+                  {
+                    label = "0.3";
+                    actionStr = ''cli command "configure terminal"'';
+                  }
+                  # Self destruct
+                  {
+                    label = "0.4";
+                    actionStr = ''cli command "no event manager applet GEN_KEY_${toString idx}"'';
+                  }
+                  {
+                    label = "0.5";
+                    actionStr = ''cli command "end"'';
+                  }
+                  {
+                    label = "1";
+                    actionStr = ''cli command "${renderKeyCmd key}"'';
+                  }
+                ];
+              };
+            }
+          )
           config.keys))
     ];
   };

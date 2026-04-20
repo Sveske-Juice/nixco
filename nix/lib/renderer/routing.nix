@@ -1,17 +1,16 @@
-
 {inputs, ...}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.lib.renderRoute = route:
     (
       if route.ipv6
-        then "ipv6 "
+      then "ipv6 "
       else "ip "
     )
     + "route "
     + (
       if route.ipv6
-        then route.destination
+      then route.destination
       else "${route.destination.address} ${route.destination.subnetmask}"
     )
     + " "

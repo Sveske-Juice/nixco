@@ -1,11 +1,15 @@
-{inputs, self, ...}: let
+{
+  inputs,
+  self,
+  ...
+}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.nixcoModules.acl = {
     options = {
       acl = lib.mkOption {
         default = {};
-        type = lib.types.submodule (_: {
+        type = lib.types.submodule {
           options.standard = lib.mkOption {
             default = [];
             type = lib.types.listOf (lib.types.submodule {
@@ -38,7 +42,7 @@ in {
                       };
                       source = lib.mkOption {
                         type = lib.types.oneOf [
-                          (lib.types.enum [ "any" ])
+                          (lib.types.enum ["any"])
                           self.lib.types.ipv4Network
                           self.lib.types.ipv6Network
                         ];
@@ -91,14 +95,14 @@ in {
                       };
                       source = lib.mkOption {
                         type = lib.types.oneOf [
-                          (lib.types.enum [ "any" ])
+                          (lib.types.enum ["any"])
                           self.lib.types.ipv4Network
                           self.lib.types.ipv6Network
                         ];
                       };
                       destination = lib.mkOption {
                         type = lib.types.oneOf [
-                          (lib.types.enum [ "any" ])
+                          (lib.types.enum ["any"])
                           self.lib.types.ipv4Network
                           self.lib.types.ipv6Network
                         ];
@@ -109,7 +113,7 @@ in {
               };
             });
           };
-        });
+        };
       };
     };
   };

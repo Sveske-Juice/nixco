@@ -1,15 +1,14 @@
 {inputs, ...}: let
   inherit (inputs.nixpkgs) lib;
   isValidipv4 = str: builtins.match "[0-9]{1,3}(\.[0-9]{1,3}){3}" str != null;
-  # TODO: 
-  isValidNetmask = mask: true;
+  # TODO:
+  isValidNetmask = _mask: true;
 in {
-  flake.lib.netmask2Wildcard = netmask:
-    let
-      octets = lib.splitString "." netmask;
-      invertOctet = o: toString (255 - lib.toInt o);
-    in
-      lib.concatStringsSep "." (map invertOctet octets);
+  flake.lib.netmask2Wildcard = netmask: let
+    octets = lib.splitString "." netmask;
+    invertOctet = o: toString (255 - lib.toInt o);
+  in
+    lib.concatStringsSep "." (map invertOctet octets);
   flake.lib.types = {
     ipv4 = lib.mkOptionType {
       name = "ipv4Address";

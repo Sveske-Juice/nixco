@@ -1,8 +1,7 @@
-
 {
-inputs,
-self,
-...
+  inputs,
+  self,
+  ...
 }: let
   inherit (inputs.nixpkgs) lib;
 in {
@@ -15,10 +14,18 @@ in {
     + lib.optionalString (ifvalue.switchport.mode == "access")
     "switchport access vlan ${toString ifvalue.switchport.vlan}\n"
     + lib.optionalString (ifvalue.switchport.mode == "trunk")
-    ''
-      switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
-      switchport trunk allowed vlan ${ifvalue.switchport.trunk.allowed}
-    ''
+    (
+      ''
+        switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
+      ''
+      + (
+        if (builtins.isList ifvalue.switchport.trunk.allowed)
+        then "switchport trunk allowed vlan " + builtins.concatStringsSep "," (map toString ifvalue.switchport.trunk.allowed) + "\n"
+        else ''
+          switchport trunk allowed vlan ${ifvalue.switchport.trunk.allowed}
+        ''
+      )
+    )
     + lib.optionalString (ifvalue.switchport.portSecurity != null) (
       ''
         switchport port-security
@@ -44,14 +51,14 @@ in {
     self.lib.mkSubTitle device "Interface ${ifname}"
     + (
       if ifvalue.range
-        then "interface range ${ifname}\n"
+      then "interface range ${ifname}\n"
       else "interface ${ifname}\n"
     )
     + lib.optionalString (ifvalue.description != null) "description ${ifvalue.description}\n"
     + lib.optionalString (ifvalue.encapsulation != null) "encapsulation dot1q ${toString ifvalue.encapsulation.vlanId}\n"
     + (
       if ifvalue.switchport != null
-        then self.lib.renderSwitchport ifvalue
+      then self.lib.renderSwitchport ifvalue
       else ""
     )
     +
@@ -68,8 +75,8 @@ in {
     (
       (lib.optionalString (ifvalue.ipv6.linkLocal != null) "ipv6 address ${ifvalue.ipv6.linkLocal} link-local\n")
       + (builtins.concatStringsSep "" (map (
-        addr: "ipv6 address ${addr}\n"
-      )
+          addr: "ipv6 address ${addr}\n"
+        )
         ifvalue.ipv6.addresses))
       +
       # DHCPv6
@@ -78,20 +85,20 @@ in {
         (
           lib.optionalString (ifvalue.ipv6.dhcp.relay != null)
           ''
-        ipv6 dhcp relay destination ${ifvalue.ipv6.dhcp.relay.destination} ${lib.optionalString (ifvalue.ipv6.dhcp.relay.interface != null) ifvalue.ipv6.dhcp.relay.interface}
+            ipv6 dhcp relay destination ${ifvalue.ipv6.dhcp.relay.destination} ${lib.optionalString (ifvalue.ipv6.dhcp.relay.interface != null) ifvalue.ipv6.dhcp.relay.interface}
           ''
         )
       )
     )
     + lib.optionalString (ifvalue.channelGroup != null) "channel-group ${toString ifvalue.channelGroup.groupNumber} mode ${ifvalue.channelGroup.mode}\n"
     + lib.optionalString (ifvalue.ip.accessGroup != null) "access-group ${
-    if ifvalue.ip.accessGroup.id != null
+      if ifvalue.ip.accessGroup.id != null
       then toString ifvalue.ip.accessGroup.id
-    else ifvalue.ip.accessGroup.name
-  } ${ifvalue.ip.accessGroup.interface}\n"
+      else ifvalue.ip.accessGroup.name
+    } ${ifvalue.ip.accessGroup.interface}\n"
     + (
       if ifvalue.shutdown
-        then "shutdown\n"
+      then "shutdown\n"
       else "no shutdown\n"
     );
 }

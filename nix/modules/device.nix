@@ -1,4 +1,4 @@
-{inputs, self, ...}: let
+{inputs, ...}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.nixcoModules.device = {

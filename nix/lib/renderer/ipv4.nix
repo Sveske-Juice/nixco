@@ -1,11 +1,11 @@
 {
-inputs,
-self,
-...
+  inputs,
+  self,
+  ...
 }: let
   inherit (inputs.nixpkgs) lib;
 in {
-  flake.lib.renderIpv4 = device: 
+  flake.lib.renderIpv4 = device:
     self.lib.mkSubTitle device "RESET"
     + ''
       no ip domain name
@@ -19,17 +19,17 @@ in {
     + lib.optionalString device.ip.domainLookup.enable "ip domain lookup\n"
     + (
       if device.ip.routing
-        then "ip routing\n"
+      then "ip routing\n"
       else "no ip routing\n"
     )
     + (
       if device.ip.http.server.enable
-        then "ip http server\n"
+      then "ip http server\n"
       else "no ip http server\n"
     )
     + (
       if device.ip.http.secureServer.enable
-        then "ip http secure-server\n"
+      then "ip http secure-server\n"
       else "no ip http secure-server\n"
     );
 }

@@ -42,7 +42,7 @@ in {
                     '';
                   };
                   allowed = lib.mkOption {
-                    type = lib.types.str;
+                    type = lib.types.either (lib.types.listOf lib.types.int) lib.types.str;
                     default = "1-1005";
                     description = ''
                       VLANs allowed on this trunk interface. Can be a single VLAN "x"

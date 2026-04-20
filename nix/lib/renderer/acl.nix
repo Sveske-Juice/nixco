@@ -1,4 +1,8 @@
-{inputs, self, ...}: let
+{
+  inputs,
+  self,
+  ...
+}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.lib.renderACLs = device:
@@ -8,57 +12,57 @@ in {
     ''
     + self.lib.mkSubTitle device "Standard ACLs"
     + (builtins.concatStringsSep "\n" (map (
-      acl:
-      ''
-        ip access-list standard ${
-        if acl.name != null
-          then acl.name
-        else toString acl.id
-      }
-      ''
-      + (builtins.concatStringsSep "\n" (map (
-        rule:
-        lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
-        + ''
-          ${rule.action} ${
-          if rule.source == "any"
-            then "any"
-          else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
-        }
-        ''
+        acl:
+          ''
+            ip access-list standard ${
+              if acl.name != null
+              then acl.name
+              else toString acl.id
+            }
+          ''
+          + (builtins.concatStringsSep "\n" (map (
+              rule:
+                lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
+                + ''
+                  ${rule.action} ${
+                    if rule.source == "any"
+                    then "any"
+                    else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
+                  }
+                ''
+            )
+            acl.rules))
       )
-        acl.rules))
-    )
       device.acl.standard))
     + self.lib.mkSubTitle device "Extended ACLs"
     + (builtins.concatStringsSep "\n" (map (
-      acl:
-      ''
-        ip access-list extended ${
-        if acl.name != null
-          then acl.name
-        else toString acl.id
-      }
-      ''
-      + (builtins.concatStringsSep "\n" (map (
-        rule:
-        lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
-        + "${rule.action} ${rule.protocol} "
-        + "${
-        if rule.source == "any"
-          then "any"
-        else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
-      } "
-        + "${
-        if rule.destination == "any"
-          then "any"
-        else "${rule.destination.addr} ${self.lib.netmask2Wildcard rule.destination.netmask}"
-      } "
-        + lib.optionalString (rule.op != null) "${rule.op} "
-        + lib.optionalString rule.log "log"
+        acl:
+          ''
+            ip access-list extended ${
+              if acl.name != null
+              then acl.name
+              else toString acl.id
+            }
+          ''
+          + (builtins.concatStringsSep "\n" (map (
+              rule:
+                lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
+                + "${rule.action} ${rule.protocol} "
+                + "${
+                  if rule.source == "any"
+                  then "any"
+                  else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
+                } "
+                + "${
+                  if rule.destination == "any"
+                  then "any"
+                  else "${rule.destination.addr} ${self.lib.netmask2Wildcard rule.destination.netmask}"
+                } "
+                + lib.optionalString (rule.op != null) "${rule.op} "
+                + lib.optionalString rule.log "log"
+            )
+            acl.rules))
+          + "\n"
       )
-        acl.rules))
-        + "\n"
-    )
       device.acl.extended));
 }

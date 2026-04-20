@@ -13,13 +13,13 @@
     +
     # Render actions
     (builtins.concatStringsSep "\n" (map (
-      action: ''action ${action.label} ${action.actionStr}''
-    )
+        action: ''action ${action.label} ${action.actionStr}''
+      )
       applet.actions))
     + "\n";
 in {
   flake.lib.renderEEM = eem:
-    # Render all applets
+  # Render all applets
     builtins.concatStringsSep "\n"
     (
       lib.attrsets.mapAttrsToList
