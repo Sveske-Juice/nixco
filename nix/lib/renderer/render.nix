@@ -26,6 +26,7 @@ in {
       banner prompt-timeout #${device.banner.promptTimeout}#
       banner slip-ppp #${device.banner.slipPPP}#
     ''
+    + self.lib.renderUsers device
     + self.lib.mkTitle device "VLANs"
     + (lib.concatMapAttrsStringSep "" (name: vlan: ''
         vlan ${toString vlan.id}

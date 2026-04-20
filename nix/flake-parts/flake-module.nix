@@ -19,6 +19,7 @@
                 [
                   self.nixcoModules.misc
                   self.nixcoModules.banner
+                  self.nixcoModules.users
                   self.nixcoModules.device
                   self.nixcoModules.vlans
                   self.nixcoModules.ip
@@ -54,6 +55,10 @@
                   type = lib.types.listOf lib.types.str;
                   default = [];
                   description = "The interfaces this device have";
+                };
+                deviceType = lib.mkOption {
+                  type = lib.types.enum [ "switch" "router" ];
+                  description = "The type of this device";
                 };
               };
             });
