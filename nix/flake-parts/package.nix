@@ -4,7 +4,7 @@
       pname = "nixco";
       version = builtins.readFile ../../VERSION;
 
-      src = ./.;
+      src = ../..;
 
       nativeBuildInputs = [
         pkgs.clang

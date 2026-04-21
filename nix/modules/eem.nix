@@ -120,47 +120,6 @@ in {
 
     config.eem.applets = lib.mkMerge [
       (let
-        pcInterfaces = lib.attrsets.filterAttrs (_: value: value.portChannel) config.interfaces;
-        renderedPCInts = builtins.concatStringsSep "\n" (lib.mapAttrsToList (
-            intname: intvalue:
-              self.lib.renderInterface config intname intvalue
-          )
-          pcInterfaces);
-        lines = builtins.filter (l: l != "") (lib.splitString "\n" renderedPCInts);
-        # FIX_PORTCHANNELS EEM Intial boot applet
-      in {
-        "FIX_PORTCHANNELS" = {
-          event.eventStr = ''syslog pattern "SYS-5-RESTART" occurs 1 maxrun 120'';
-          actions =
-            [
-              {
-                label = "0.1";
-                actionStr = "wait 30";
-              }
-              {
-                label = "0.2";
-                actionStr = ''cli command "enable"'';
-              }
-              {
-                label = "0.3";
-                actionStr = ''cli command "configure terminal"'';
-              }
-              # Self destruct
-              {
-                label = "0.4";
-                actionStr = ''cli command "no event manager applet FIX_PORTCHANNELS"'';
-              }
-            ]
-            ++ lib.lists.imap0 (
-              idx: line: {
-                label = "20.${lib.fixedWidthString 3 "0" (toString idx)}";
-                actionStr = ''cli command "${line}"'';
-              }
-            )
-            lines;
-        };
-      })
-      (let
         renderKeyCmd = key:
           "crypto key generate ${key.type} "
           + (

@@ -103,6 +103,18 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
       return "MULTILINE";
     }
 
+    // TODO: use username from cliparser
+    if (buf.find("Username:") != std::string::npos) {
+      spdlog::warn("Username required!");
+      std::string username;
+      std::cout << "Username: ";
+      std::cin >> username;
+
+      auto err = transport.write(fmt::format("{:s}\n", username));
+      if (err) return std::unexpected<int>(-1);
+
+      buf.clear();
+    }
     if (buf.find("Password:") != std::string::npos) {
       spdlog::warn("Password required!");
       std::string pass;

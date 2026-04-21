@@ -6,6 +6,8 @@
   inherit (inputs.nixpkgs) lib;
 in {
   flake.lib.renderSwitchport = ifvalue:
+    if ifvalue.switchport.enable then
+      (
     ''
       switchport
       switchport mode ${ifvalue.switchport.mode}
@@ -46,7 +48,8 @@ in {
         + (lib.optionalString ifvalue.switchport.portSecurity.aging.static
           "switchport port-security aging static")
       )
-    );
+    ))
+    else "no switchport\n";
   flake.lib.renderInterface = device: ifname: ifvalue:
     self.lib.mkSubTitle device "Interface ${ifname}"
     + (
@@ -67,7 +70,7 @@ in {
     (
       (lib.optionalString (ifvalue.ip.address != null && ifvalue.ip.address == "dhcp") "ip address dhcp\n")
       + (lib.optionalString (ifvalue.ip.address != null && builtins.isAttrs ifvalue.ip.address) "ip address ${ifvalue.ip.address.addr} ${ifvalue.ip.address.netmask}\n")
-      + (lib.optionalString (ifvalue.ip.ipHelper != null) "ip helpher-address ${ifvalue.ip.ipHelper}\n")
+      + (lib.optionalString (ifvalue.ip.helperAddresses != null) (lib.concatMapStrings (addr: "ip helper-address ${addr}\n") ifvalue.ip.helperAddresses))
     )
     +
     # IPv6
@@ -96,6 +99,7 @@ in {
       then toString ifvalue.ip.accessGroup.id
       else ifvalue.ip.accessGroup.name
     } ${ifvalue.ip.accessGroup.interface}\n"
+    + ifvalue.extraPostConfig
     + (
       if ifvalue.shutdown
       then "shutdown\n"

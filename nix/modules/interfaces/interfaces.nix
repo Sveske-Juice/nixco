@@ -75,6 +75,11 @@ in {
           };
         });
       };
+      extraPostConfig = lib.mkOption {
+        description = "Extra Config added to end of interface config (before shutdown)";
+        default = "";
+        type = lib.types.lines;
+      };
     };
   };
 }

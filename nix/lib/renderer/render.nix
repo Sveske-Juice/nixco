@@ -18,13 +18,13 @@ in {
     + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + self.lib.mkTitle device "Banners"
     + ''
-      banner motd #${device.banner.motd}#
-      banner login #${device.banner.login}#
-      banner config-save #${device.banner.configSave}#
-      banner exec #${device.banner.exec}#
-      banner incoming #${device.banner.incoming}#
-      banner prompt-timeout #${device.banner.promptTimeout}#
-      banner slip-ppp #${device.banner.slipPPP}#
+      banner motd ^C${device.banner.motd}^C
+      banner login ^C${device.banner.login}^C
+      banner config-save ^C${device.banner.configSave}^C
+      banner exec ^C${device.banner.exec}^C
+      banner incoming ^C${device.banner.incoming}^C
+      banner prompt-timeout ^C${device.banner.promptTimeout}^C
+      banner slip-ppp ^C${device.banner.slipPPP}^C
     ''
     + self.lib.renderUsers device
     + self.lib.mkTitle device "VLANs"
@@ -34,6 +34,7 @@ in {
       '')
       device.vlans)
     + lib.optionalString (device.vlans != {}) "exit\n"
+    + self.lib.renderKeys device
     + self.lib.mkTitle device "ACLs"
     + self.lib.renderACLs device
     + self.lib.mkTitle device "IPv4 Settings"

@@ -9,6 +9,11 @@ in {
         default = null;
         type = lib.types.nullOr (lib.types.submodule {
           options = {
+            enable = lib.mkOption {
+              default = true;
+              description = "Is this interface a switchport?";
+              type = lib.types.bool;
+            };
             mode = lib.mkOption {
               type = lib.types.nullOr (lib.types.enum [
                 "access"

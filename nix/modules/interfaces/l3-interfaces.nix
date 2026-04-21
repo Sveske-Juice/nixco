@@ -31,9 +31,9 @@ in {
                 netmask = "255.255.255.224";
               };
             };
-            ipHelper = lib.mkOption {
-              type = lib.types.nullOr self.lib.types.ipv4;
+            helperAddresses = lib.mkOption {
               default = null;
+              type = lib.types.nullOr (lib.types.listOf self.lib.types.ipv4);
             };
             accessGroup = lib.mkOption {
               default = null;
