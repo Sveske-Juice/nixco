@@ -17,10 +17,10 @@ in {
       ) chain.keys
     )
     ;
-  flake.lib.renderKeys = device: builtins.trace device.keyChains (
+  flake.lib.renderKeys = device:
     lib.optionalString (device.keyChains != null) (
       lib.concatMapAttrsStringSep "\n" 
       (name: chain: self.lib.renderKeyChain name chain)
       device.keyChains
-    ));
+    );
 }
