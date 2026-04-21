@@ -60,7 +60,7 @@ in {
     + lib.optionalString (ifvalue.description != null) "description ${ifvalue.description}\n"
     + lib.optionalString (ifvalue.encapsulation != null) "encapsulation dot1q ${toString ifvalue.encapsulation.vlanId}\n"
     + (
-      if ifvalue.switchport != null
+      if ifvalue.switchport != null && device.deviceSpec.deviceType == "switch"
       then self.lib.renderSwitchport ifvalue
       else ""
     )
