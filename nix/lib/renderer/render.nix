@@ -27,13 +27,17 @@ in {
       banner slip-ppp ^C${device.banner.slipPPP}^C
     ''
     + self.lib.renderUsers device
-    + self.lib.mkTitle device "VLANs"
-    + (lib.concatMapAttrsStringSep "" (name: vlan: ''
+    + lib.optionalString (device.deviceSpec.deviceType == "switch")
+    (
+      self.lib.mkTitle device "VLANs"
+      +
+      (lib.concatMapAttrsStringSep "" (name: vlan: ''
         vlan ${toString vlan.id}
         name ${name}
       '')
-      device.vlans)
-    + lib.optionalString (device.vlans != {}) "exit\n"
+        device.vlans)
+      + lib.optionalString (device.vlans != {}) "exit\n"
+    )
     + self.lib.renderKeys device
     + self.lib.mkTitle device "ACLs"
     + self.lib.renderACLs device
