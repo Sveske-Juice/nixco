@@ -336,9 +336,9 @@ std::optional<std::string> TclStartStrategy::apply(Transport &transport, const C
   deleteFile(transport, "flash:vlan.dat");
 
   if (cliparser.cmdOptionExists("--replace")) {
-    err = transport.write("copy flash:nixco.cfg running-config\n\n");
+    err = transport.write("configure replace flash:nixco.cfg force");
     if (err) return err;
-    spdlog::info("Copying config to running-config...");
+    spdlog::info("Replacing running-config with flash:nixco.cfg");
 
     // Should return to prompt after copying into running-config
     prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
@@ -348,8 +348,8 @@ std::optional<std::string> TclStartStrategy::apply(Transport &transport, const C
     err = transport.write("write memory\n");
     if (err) return err;
 
-    err = transport.write("terminal length 0\nshow run\n");
-    if (err) return err;
+    // err = transport.write("terminal length 0\nshow run\n");
+    // if (err) return err;
   }
 
   return std::nullopt;

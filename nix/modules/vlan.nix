@@ -4,7 +4,7 @@ in {
   flake.nixcoModules.vlans = {
     options = {
       vlans = lib.mkOption {
-        default = [];
+        default = {};
         type = lib.types.attrsOf (lib.types.submodule {
           options = {
             id = lib.mkOption {

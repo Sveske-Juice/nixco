@@ -16,7 +16,7 @@ in {
             type = lib.types.attrsOf (lib.types.submodule {
               options = {
                 cryptographicAlgorithm = lib.mkOption {
-                  type = lib.types.enum [ "md5" "hmac-sha-1" "hmac-sha-384" "hmac-sha-512" ];
+                  type = lib.types.enum ["md5" "hmac-sha-1" "hmac-sha-384" "hmac-sha-512"];
                 };
                 keyString = lib.mkOption {
                   type = lib.types.str;

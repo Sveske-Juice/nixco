@@ -1,9 +1,5 @@
 # Embedded Event Manager
-{
-  inputs,
-  self,
-  ...
-}: let
+{inputs, ...}: let
   inherit (inputs.nixpkgs) lib;
 in {
   flake.nixcoModules.eem = {config, ...}: {

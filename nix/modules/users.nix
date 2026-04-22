@@ -8,7 +8,7 @@ in {
         options = {
           algorithmType = lib.mkOption {
             default = "scrypt";
-            type = lib.types.enum [ "md5" "sha256" "scrypt" ];
+            type = lib.types.enum ["md5" "sha256" "scrypt"];
           };
           secret = lib.mkOption {
             type = lib.types.str;
@@ -30,7 +30,7 @@ in {
           };
           algorithmType = lib.mkOption {
             default = "scrypt";
-            type = lib.types.enum [ "sha256" "scrypt" ];
+            type = lib.types.enum ["sha256" "scrypt"];
           };
           secret = lib.mkOption {
             type = lib.types.str;

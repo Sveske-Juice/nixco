@@ -27,17 +27,17 @@ in {
       banner slip-ppp ^C${device.banner.slipPPP}^C
     ''
     + self.lib.renderUsers device
-    + lib.optionalString (device.deviceSpec.deviceType == "switch")
-    (
-      self.lib.mkTitle device "VLANs"
-      +
-      (lib.concatMapAttrsStringSep "" (name: vlan: ''
-        vlan ${toString vlan.id}
-        name ${name}
-      '')
-        device.vlans)
-      + lib.optionalString (device.vlans != {}) "exit\n"
-    )
+    # + lib.optionalString (device.deviceSpec.deviceType == "switch")
+    # (
+    #   self.lib.mkTitle device "VLANs"
+    #   +
+    #   (lib.concatMapAttrsStringSep "" (name: vlan: ''
+    #     vlan ${toString vlan.id}
+    #     name ${name}
+    #   '')
+    #     device.vlans)
+    #   + lib.optionalString (device.vlans != {}) "exit\n"
+    # )
     + self.lib.renderKeys device
     + self.lib.mkTitle device "ACLs"
     + self.lib.renderACLs device
@@ -46,13 +46,7 @@ in {
     + self.lib.mkTitle device "Global IPv6 Settings"
     + self.lib.renderIpv6 device
     + self.lib.mkTitle device "Interfaces"
-    + lib.concatStringsSep "\n" (map (
-        value:
-          self.lib.renderInterface device value.name value.value
-      ) (builtins.sort (a: b: a.value.priority < b.value.priority) (map (name: {
-        inherit name;
-        value = device.interfaces.${name};
-      }) (builtins.attrNames device.interfaces))))
+    + self.lib.renderInterfaces device
     + self.lib.mkTitle device "Routing"
     + self.lib.mkSubTitle device "Static Routes"
     + builtins.concatStringsSep "\n" (map (
