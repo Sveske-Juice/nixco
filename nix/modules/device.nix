@@ -5,6 +5,9 @@ in {
     options.hostname = lib.mkOption {
       type = lib.types.str;
     };
+    options.version = lib.mkOption {
+      type = lib.types.str;
+    };
     options.deviceSpec = lib.mkOption {
       type = lib.types.attrs;
     };

@@ -11,6 +11,7 @@ in {
     devices;
   flake.lib.render = device:
     self.lib.mkSubTitle device "Pre config"
+    + "version ${device.version}\n"
     + device.extraPreConfig
     + ''
       vtp mode transparent
