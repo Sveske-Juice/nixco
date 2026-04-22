@@ -46,11 +46,6 @@ in {
     + self.lib.mkTitle device "Global IPv6 Settings"
     + self.lib.renderIpv6 device
     + self.lib.mkTitle device "Interfaces"
-    + self.lib.mkSubTitle device "RESET"
-    + builtins.concatStringsSep "" (map (int: ''
-        default interface ${int}
-      '')
-      device.deviceSpec.interfaces)
     + lib.concatStringsSep "\n" (map (
         value:
           self.lib.renderInterface device value.name value.value
