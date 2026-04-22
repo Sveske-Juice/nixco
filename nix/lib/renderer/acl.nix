@@ -6,11 +6,7 @@
   inherit (inputs.nixpkgs) lib;
 in {
   flake.lib.renderACLs = device:
-    self.lib.mkSubTitle device "RESET"
-    + ''
-      ! ACLs cant be reset automaticaly, to reset you must use a strategy which reloads the device
-    ''
-    + self.lib.mkSubTitle device "Standard ACLs"
+    self.lib.mkSubTitle device "Standard ACLs"
     + (builtins.concatStringsSep "\n" (map (
         acl:
           ''
