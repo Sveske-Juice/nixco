@@ -18,15 +18,13 @@ in {
     ''
     + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
     + self.lib.mkTitle device "Banners"
-    + ''
-      banner motd ^C${device.banner.motd}^C
-      banner login ^C${device.banner.login}^C
-      banner config-save ^C${device.banner.configSave}^C
-      banner exec ^C${device.banner.exec}^C
-      banner incoming ^C${device.banner.incoming}^C
-      banner prompt-timeout ^C${device.banner.promptTimeout}^C
-      banner slip-ppp ^C${device.banner.slipPPP}^C
-    ''
+    + lib.optionalString (device.banner.motd != "") "banner motd ${device.banner.seperator}${device.banner.motd}${device.banner.seperator}\n"
+    + lib.optionalString (device.banner.login != "") "banner login ${device.banner.seperator}${device.banner.login}${device.banner.seperator}\n"
+    + lib.optionalString (device.banner.configSave != "") "banner config-save ${device.banner.seperator}${device.banner.configSave}${device.banner.seperator}\n"
+    + lib.optionalString (device.banner.exec != "") "banner exec ${device.banner.seperator}${device.banner.exec}${device.banner.seperator}\n"
+    + lib.optionalString (device.banner.incoming != "") "banner incoming ${device.banner.seperator}${device.banner.incoming}${device.banner.seperator}\n"
+    + lib.optionalString (device.banner.promptTimeout != "") "banner prompt-timeout ${device.banner.seperator}${device.banner.promptTimeout}${device.banner.seperator}\n"
+    + lib.optionalString (device.banner.slipPPP != "") "banner slip-ppp ${device.banner.seperator}${device.banner.slipPPP}${device.banner.seperator}\n"
     + self.lib.renderUsers device
     # + lib.optionalString (device.deviceSpec.deviceType == "switch")
     # (

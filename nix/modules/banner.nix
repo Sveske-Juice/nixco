@@ -6,6 +6,11 @@ in {
       default = {};
       type = lib.types.submodule {
         options = {
+          seperator = lib.mkOption {
+            description = "The seperator symbol to use";
+            type = lib.types.str;
+            default = "^";
+          };
           motd = lib.mkOption {
             type = lib.types.lines;
             default = "";
