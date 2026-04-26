@@ -46,24 +46,22 @@ void printUsage() {
   Serial Transport Options:
     TODO: impl
 
-  runcmds Strategy:
-    Runs the commands in the configuration one-by-one
+  reload Strategy:
+    Upload the configuration to startup-config and reload the device
+
+  replace Strategy:
+    Upload the configuration to flash and run
+    # configure replace force
+    with the configuration file
 
     Options:
-    TODO: --write
-
-  tclstart Stragety:
-    Uploads the configuration into the device's startup-config
-
-    Options:
-    --replace             TODO
+      -w, --write         optional: Write the configuration to startup-config
 
   Strategy:
-    -s, --strategy { tclstart | runcmds } optional (default: tclstart)
+    -s, --strategy { reload | replace } optional (default: replace)
 
   General:
     -f, --file            The configuration file to apply
-    -r, --reload          Reload the device after applying config
     -h, --help            Show this help message
     -v, --version         Show version
     -d, --debug           Show response while applying)";
@@ -138,12 +136,6 @@ int main(int argc, char **argv) {
     return -1;
   }
   spdlog::info("Done, no errors reported");
-
-  bool reload = cliparser.cmdOptionExists("-r") || cliparser.cmdOptionExists("--reload");
-  if (reload) {
-    spdlog::info("Reloading device...");
-    strategy.reload_device(transport);
-  }
 
   return EX_OK;
 }

@@ -136,46 +136,28 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
 }
 
 std::optional<std::string> Strategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
-  std::string cmd;
-  std::istringstream stream(config);
-
-  // Get into global configuration mode
   auto mode = get_to_mode(transport, GCFG, print);
   if (!mode) return mode.error();
 
-  spdlog::info("Success! We are in global config mode");
+  spdlog::info("Sucess! We are in Global conf Mode");
+  spdlog::info("Entering TCL Scripting");
 
-  while (std::getline(stream, cmd)) {
-    if (cmd.empty()) continue;
-    if (cmd.front() == '!') continue;
+  // Upload config to flash
+  auto err = uploadFile(transport, config, "flash:nixco.cfg");
+  if (err) return err;
 
-    cmd += '\n';
+  spdlog::info("Purging flash:vlan.dat");
+  deleteFile(transport, "flash:vlan.dat");
 
-    auto res = transport.write(cmd);
-    if (res.has_value()) {
-      return res.value();
-    }
+  spdlog::info("Replace startup-config with flash:nixco.cfg");
+  err = transport.write("copy flash:nixco.cfg startup-config\n");
+  if (err) return err;
 
-    // Wait for execution
-    auto recvBuffer = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
-    if (!recvBuffer.has_value()) {
-      return std::string("Failed to wait for prompt after writing command.");
-    }
+  // Should return to prompt after copying
+  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
+  if (!prompt) return "Failed to return to prompt after copying";
 
-    // HACK: handle this some other way bruh
-    if (*recvBuffer == "MULTILINE") {
-      spdlog::info("Multiline field detected, Sending until '#' encountered");
-      while (std::getline(stream, cmd)) {
-        auto err = transport.write(cmd + '\n');
-        if (err) return err;
-
-        if (cmd == "#")
-          break;
-      }
-    }
-
-    // TODO: catch + handle error in command
-  }
+  this->reload_device(transport);
 
   return std::nullopt;
 }
@@ -183,14 +165,14 @@ std::optional<std::string> Strategy::apply(Transport &transport, const CliParser
 std::expected<std::unique_ptr<Strategy>, std::string> Strategy::create_from_cliargs(const CliParser &cliparser) {
   auto strategy = cliparser.getCmdOption("-s").value_or(cliparser.getCmdOption("--strategy").value_or(""));
   if (strategy.empty()) {
-    strategy = "runcmds"; // default
+    strategy = "replace"; // default
   }
 
-  if (strategy == "runcmds") {
+  if (strategy == "reload") {
     return std::make_unique<Strategy>();
   }
-  else if (strategy == "tclstart") {
-    return std::make_unique<TclStartStrategy>();
+  else if (strategy == "replace") {
+    return std::make_unique<ReplaceStrategy>();
   }
 
   return std::unexpected<std::string>(fmt::format("Unrecognized strategy: {:s}", strategy));
@@ -308,7 +290,7 @@ std::optional<std::string> Strategy::uploadFile(Transport &transport, const std:
   return std::nullopt;
 }
 
-std::optional<std::string> TclStartStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
+std::optional<std::string> ReplaceStrategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
   auto mode = get_to_mode(transport, PEXEC, print);
   if (!mode) return mode.error();
 
@@ -319,37 +301,21 @@ std::optional<std::string> TclStartStrategy::apply(Transport &transport, const C
   auto err = uploadFile(transport, config, "flash:nixco.cfg");
   if (err) return err;
 
-  spdlog::info("Erasing startup-config");
-  err = transport.write("wr erase\n");
-  if (err) return err;
-
-  auto prompt = wait_for_prompt(transport, "[confirm]", print);
-  if (!prompt) return "err";
-
-  err = transport.write("\n");
-  if (err) return err;
-
-  err = transport.write("copy flash:nixco.cfg startup-config\n\n");
-  if (err) return err;
-
   spdlog::info("Purging flash:vlan.dat");
   deleteFile(transport, "flash:vlan.dat");
 
-  if (cliparser.cmdOptionExists("--replace")) {
-    err = transport.write("configure replace flash:nixco.cfg force");
-    if (err) return err;
-    spdlog::info("Replacing running-config with flash:nixco.cfg");
+  spdlog::info("Replacing running-config with flash:nixco.cfg");
+  err = transport.write("configure replace flash:nixco.cfg force\n");
+  if (err) return err;
 
-    // Should return to prompt after copying into running-config
-    prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
-    if (!prompt) return "Failed to return to prompt after copying to running-config";
+  // Should return to prompt after replacing
+  auto prompt = wait_for_prompt(transport, std::regex(modePatterns[ANYMODE]), print);
+  if (!prompt) return "Failed to return to prompt after replace command";
 
+  if (cliparser.cmdOptionExists("-w") || cliparser.cmdOptionExists("--write")) {
     spdlog::info("Writing running-config to startup-config");
     err = transport.write("write memory\n");
     if (err) return err;
-
-    // err = transport.write("terminal length 0\nshow run\n");
-    // if (err) return err;
   }
 
   return std::nullopt;
