@@ -73,7 +73,7 @@ in {
                     });
                   };
                   event = lib.mkOption {
-                    default = [];
+                    default = {};
                     type = lib.types.submodule {
                       options = {
                         # TODO: make options for:
