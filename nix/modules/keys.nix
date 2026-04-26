@@ -1,7 +1,7 @@
 {inputs, ...}: let
   inherit (inputs.nixpkgs) lib;
 in {
-  flake.nixcoModules.keys = {
+  flake.nixcoModules.keys = {config, ...}: {
     options.keyChains = lib.mkOption {
       default = {};
       type = lib.types.attrsOf (lib.types.submodule {
@@ -66,5 +66,16 @@ in {
         };
       });
     };
+
+    config.assertions = [
+      {
+        assertion = lib.lists.all (key: key.type == "rsa" -> key.rsaOpts.label == null -> config.ip.domainName != null) config.keys;
+        message = ''
+          Key with no label specified but no domain name has been set.
+          Either set a domain name with `ip.domainName` or set a custom label
+          for the key.
+        '';
+      }
+    ];
   };
 }
