@@ -17,6 +17,7 @@
             type = lib.types.attrsOf (lib.types.submodule {
               imports =
                 [
+                  self.nixcoModules.assertions
                   self.nixcoModules.misc
                   self.nixcoModules.banner
                   self.nixcoModules.users
