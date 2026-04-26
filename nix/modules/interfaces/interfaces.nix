@@ -6,7 +6,7 @@
 }: let
   inherit (inputs.nixpkgs) lib;
 in {
-  flake.nixcoModules.interfaces = {
+  flake.nixcoModules.interfaces = {config, ...}: {
     options = {
       interfaces = lib.mkOption {
         type = lib.types.attrsOf (lib.types.submodule [
@@ -18,6 +18,15 @@ in {
         description = "Interface configuration";
       };
     };
+
+    config.assertions = [
+      {
+        assertion = lib.lists.all (int: config.deviceSpec.deviceType == "router" -> int.switchport == null) (builtins.attrValues config.interfaces);
+        message = ''
+          It is not allowed to configure switchport settings on router interfaces.
+        '';
+      }
+    ];
   };
 
   flake.nixcoModules.interface-general = {
