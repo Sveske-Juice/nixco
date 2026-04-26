@@ -23,11 +23,9 @@ in {
 
           expanded = lib.concatMap expandSegment segments;
         in
-          builtins.listToAttrs (map (n: {
-            name = n;
-            inherit value;
-          })
-            expanded)
+          if value.range
+          then builtins.listToAttrs (map (n: { name = n; inherit value; }) expanded)
+          else { "${name}" = value; }
       )
       interfaces;
     renderSwitchport = ifvalue:
