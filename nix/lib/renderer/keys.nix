@@ -9,17 +9,21 @@ in {
     ''
       key chain ${name}
     ''
-    + lib.optionalString (chain.description != null) "description ${chain.description}\n"
-    + lib.optionalString (chain.keys != {})
+    + self.lib.indentLines
     (
-      lib.concatMapAttrsStringSep "\n" (
-        keyId: key: ''
-          key ${keyId}
-          cryptographic-algorithm ${key.cryptographicAlgorithm}
-          key-string ${key.keyString}
-        ''
+      lib.optionalString (chain.description != null) "description ${chain.description}\n"
+      + lib.optionalString (chain.keys != {})
+      (
+        lib.concatMapAttrsStringSep "\n" (
+          keyId: key:
+            "key ${keyId}\n"
+            + self.lib.indentLines ''
+              cryptographic-algorithm ${key.cryptographicAlgorithm}
+              key-string ${key.keyString}
+            ''
+        )
+        chain.keys
       )
-      chain.keys
     );
   flake.lib.renderKeys = device:
     lib.optionalString (device.keyChains != null) (
