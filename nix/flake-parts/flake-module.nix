@@ -28,8 +28,8 @@
                 self.nixcoModules.keys
                 self.nixcoModules.routing
                 self.nixcoModules.acl
-              ];
-              # ++ config.nixco.extraModules;
+              ]
+              ++ config.nixco.extraModules;
             });
             default = {};
           };
