@@ -1,8 +1,4 @@
-{
-  inputs,
-  self,
-  ...
-}: {
+{self, ...}: {
   flake.lib.renderIpv6 = device:
     self.lib.mkSubTitle device "RESET"
     + ''

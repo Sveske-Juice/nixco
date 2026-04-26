@@ -15,21 +15,22 @@
           };
           devices = lib.mkOption {
             type = lib.types.attrsOf (lib.types.submodule {
-              imports = [
-                self.nixcoModules.misc
-                self.nixcoModules.banner
-                self.nixcoModules.users
-                self.nixcoModules.device
-                self.nixcoModules.vlans
-                self.nixcoModules.ip
-                self.nixcoModules.ipv6
-                self.nixcoModules.interfaces
-                self.nixcoModules.eem
-                self.nixcoModules.keys
-                self.nixcoModules.routing
-                self.nixcoModules.acl
-              ]
-              ++ config.nixco.extraModules;
+              imports =
+                [
+                  self.nixcoModules.misc
+                  self.nixcoModules.banner
+                  self.nixcoModules.users
+                  self.nixcoModules.device
+                  self.nixcoModules.vlans
+                  self.nixcoModules.ip
+                  self.nixcoModules.ipv6
+                  self.nixcoModules.interfaces
+                  self.nixcoModules.eem
+                  self.nixcoModules.keys
+                  self.nixcoModules.routing
+                  self.nixcoModules.acl
+                ]
+                ++ config.nixco.extraModules;
             });
             default = {};
           };

@@ -24,17 +24,22 @@ in {
           expanded = lib.concatMap expandSegment segments;
         in
           if value.range
-          then builtins.listToAttrs (map (n: { name = n; inherit value; }) expanded)
-          else { "${name}" = value; }
+          then
+            builtins.listToAttrs (map (n: {
+                name = n;
+                inherit value;
+              })
+              expanded)
+          else {"${name}" = value;}
       )
       interfaces;
     renderSwitchport = ifvalue:
       if ifvalue.switchport.enable
-        then
+      then
         (
           ''
-          switchport
-          switchport mode ${ifvalue.switchport.mode}
+            switchport
+            switchport mode ${ifvalue.switchport.mode}
           ''
           + lib.optionalString (!ifvalue.switchport.negotiate) "switchport nonegotiate\n"
           + lib.optionalString (ifvalue.switchport.mode == "access")
@@ -42,21 +47,21 @@ in {
           + lib.optionalString (ifvalue.switchport.mode == "trunk")
           (
             ''
-            switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
+              switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
             ''
             + (
               if (builtins.isList ifvalue.switchport.trunk.allowed)
-                then "switchport trunk allowed vlan " + builtins.concatStringsSep "," (map toString ifvalue.switchport.trunk.allowed) + "\n"
+              then "switchport trunk allowed vlan " + builtins.concatStringsSep "," (map toString ifvalue.switchport.trunk.allowed) + "\n"
               else ''
-              switchport trunk allowed vlan ${ifvalue.switchport.trunk.allowed}
-                ''
+                switchport trunk allowed vlan ${ifvalue.switchport.trunk.allowed}
+              ''
             )
           )
           + lib.optionalString (ifvalue.switchport.portSecurity != null) (
             ''
-            switchport port-security
-            switchport port-security maximum ${toString ifvalue.switchport.portSecurity.maximum}
-            switchport port-security violation ${ifvalue.switchport.portSecurity.violation}
+              switchport port-security
+              switchport port-security maximum ${toString ifvalue.switchport.portSecurity.maximum}
+              switchport port-security violation ${ifvalue.switchport.portSecurity.violation}
             ''
             + lib.optionalString ((builtins.length ifvalue.switchport.portSecurity.secureMacAddresses) != 0) (
               builtins.concatStringsSep "" (map (addr: "switchport port-security mac-address ${addr}\n") ifvalue.switchport.portSecurity.secureMacAddresses)
@@ -66,8 +71,8 @@ in {
             + lib.optionalString (ifvalue.switchport.portSecurity.aging != null)
             (
               ''
-              switchport port-security aging time ${toString ifvalue.switchport.portSecurity.aging.time}
-              switchport port-security aging type ${ifvalue.switchport.portSecurity.aging.type}
+                switchport port-security aging time ${toString ifvalue.switchport.portSecurity.aging.time}
+                switchport port-security aging type ${ifvalue.switchport.portSecurity.aging.type}
               ''
               + (lib.optionalString ifvalue.switchport.portSecurity.aging.static
                 "switchport port-security aging static")
@@ -76,12 +81,12 @@ in {
         )
       else "no switchport\n";
     renderInterface = device: ifname: ifvalue: let
-      body = 
+      body =
         lib.optionalString (ifvalue.description != null) "description ${ifvalue.description}\n"
         + lib.optionalString (ifvalue.encapsulation != null) "encapsulation dot1q ${toString ifvalue.encapsulation.vlanId}\n"
         + (
           if ifvalue.switchport != null && device.deviceSpec.deviceType == "switch"
-            then self.lib.renderSwitchport ifvalue
+          then self.lib.renderSwitchport ifvalue
           else ""
         )
         +
@@ -98,8 +103,8 @@ in {
         (
           (lib.optionalString (ifvalue.ipv6.linkLocal != null) "ipv6 address ${ifvalue.ipv6.linkLocal} link-local\n")
           + (builtins.concatStringsSep "" (map (
-            addr: "ipv6 address ${addr}\n"
-          )
+              addr: "ipv6 address ${addr}\n"
+            )
             ifvalue.ipv6.addresses))
           +
           # DHCPv6
@@ -108,21 +113,21 @@ in {
             (
               lib.optionalString (ifvalue.ipv6.dhcp.relay != null)
               ''
-            ipv6 dhcp relay destination ${ifvalue.ipv6.dhcp.relay.destination} ${lib.optionalString (ifvalue.ipv6.dhcp.relay.interface != null) ifvalue.ipv6.dhcp.relay.interface}
+                ipv6 dhcp relay destination ${ifvalue.ipv6.dhcp.relay.destination} ${lib.optionalString (ifvalue.ipv6.dhcp.relay.interface != null) ifvalue.ipv6.dhcp.relay.interface}
               ''
             )
           )
         )
         + lib.optionalString (ifvalue.channelGroup != null) "channel-group ${toString ifvalue.channelGroup.groupNumber} mode ${ifvalue.channelGroup.mode}\n"
         + lib.optionalString (ifvalue.ip.accessGroup != null) "access-group ${
-        if ifvalue.ip.accessGroup.id != null
+          if ifvalue.ip.accessGroup.id != null
           then toString ifvalue.ip.accessGroup.id
-        else ifvalue.ip.accessGroup.name
-      } ${ifvalue.ip.accessGroup.interface}\n"
+          else ifvalue.ip.accessGroup.name
+        } ${ifvalue.ip.accessGroup.interface}\n"
         + ifvalue.extraPostConfig
         + (
           if ifvalue.shutdown
-            then "shutdown\n"
+          then "shutdown\n"
           else "no shutdown\n"
         );
     in
@@ -137,9 +142,9 @@ in {
       }) (builtins.attrNames expandedInterfaces));
     in
       lib.concatStringsSep "\n" (map (
-        value:
-        self.lib.renderInterface device value.name value.value
-      )
+          value:
+            self.lib.renderInterface device value.name value.value
+        )
         sortedInterfaces);
   };
 }
