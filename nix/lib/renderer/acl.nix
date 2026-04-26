@@ -16,7 +16,7 @@ in {
               else toString acl.id
             }
           ''
-          + (builtins.concatStringsSep "\n" (map (
+          + self.lib.indentLines (builtins.concatStringsSep "\n" (map (
               rule:
                 lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
                 + ''
@@ -40,7 +40,7 @@ in {
               else toString acl.id
             }
           ''
-          + (builtins.concatStringsSep "\n" (map (
+          + self.lib.indentLines (builtins.concatStringsSep "\n" (map (
               rule:
                 lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
                 + "${rule.action} ${rule.protocol} "
