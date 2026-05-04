@@ -304,6 +304,9 @@ std::optional<std::string> ReplaceStrategy::apply(Transport &transport, const Cl
   spdlog::info("Purging flash:vlan.dat");
   deleteFile(transport, "flash:vlan.dat");
 
+  err = transport.write("terminal length 0\n");
+  if (err) return err;
+
   spdlog::info("Replacing running-config with flash:nixco.cfg");
   err = transport.write("configure replace flash:nixco.cfg force\n");
   if (err) return err;
