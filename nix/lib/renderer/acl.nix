@@ -19,15 +19,14 @@ in {
           + self.lib.indentLines (builtins.concatStringsSep "\n" (map (
               rule:
                 lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
-                + ''
-                  ${rule.action} ${
+                + " ${rule.action} ${
                     if rule.source == "any"
                     then "any"
                     else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
-                  }
-                ''
+                  }"
             )
             acl.rules))
+          + "\n"
       )
       device.acl.standard))
     + self.lib.mkSubTitle device "Extended ACLs"
