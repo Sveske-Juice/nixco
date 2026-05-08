@@ -43,9 +43,8 @@ in {
               switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
             ''
             + (
-              # TODO: sort ascending
               if (builtins.isList ifvalue.switchport.trunk.allowed)
-              then "switchport trunk allowed vlan " + builtins.concatStringsSep "," (map toString ifvalue.switchport.trunk.allowed) + "\n"
+              then "switchport trunk allowed vlan " + builtins.concatStringsSep "," (map toString (builtins.sort (a: b: a < b) ifvalue.switchport.trunk.allowed)) + "\n"
               else ''
                 switchport trunk allowed vlan ${ifvalue.switchport.trunk.allowed}
               ''
