@@ -16,6 +16,7 @@ in {
               else toString acl.id
             }
           ''
+          # TODO: render sequence number
           + self.lib.indentLines (builtins.concatStringsSep "\n" (map (
               rule:
                 lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"

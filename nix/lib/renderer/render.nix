@@ -38,17 +38,16 @@ in {
       + lib.optionalString (device.banner.promptTimeout != "") "banner prompt-timeout ${device.banner.seperator}${device.banner.promptTimeout}${device.banner.seperator}\n"
       + lib.optionalString (device.banner.slipPPP != "") "banner slip-ppp ${device.banner.seperator}${device.banner.slipPPP}${device.banner.seperator}\n"
       + self.lib.renderUsers device
-      # + lib.optionalString (device.deviceSpec.deviceType == "switch")
-      # (
-      #   self.lib.mkTitle device "VLANs"
-      #   +
-      #   (lib.concatMapAttrsStringSep "" (name: vlan: ''
-      #     vlan ${toString vlan.id}
-      #     name ${name}
-      #   '')
-      #     device.vlans)
-      #   + lib.optionalString (device.vlans != {}) "exit\n"
-      # )
+      + lib.optionalString (device.deviceSpec.deviceType == "switch")
+      (
+        self.lib.mkTitle device "VLANs"
+        +
+        (lib.concatMapAttrsStringSep "" (name: vlan: ''
+          vlan ${toString vlan.id}
+           name ${name}
+        '')
+          device.vlans)
+      )
       + self.lib.renderKeys device
       + self.lib.mkTitle device "ACLs"
       + self.lib.renderACLs device

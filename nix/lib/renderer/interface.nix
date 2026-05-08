@@ -38,7 +38,6 @@ in {
       then
         (
           ''
-            switchport
             switchport mode ${ifvalue.switchport.mode}
           ''
           + lib.optionalString (!ifvalue.switchport.negotiate) "switchport nonegotiate\n"
@@ -50,6 +49,7 @@ in {
               switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
             ''
             + (
+              # TODO: sort ascending
               if (builtins.isList ifvalue.switchport.trunk.allowed)
               then "switchport trunk allowed vlan " + builtins.concatStringsSep "," (map toString ifvalue.switchport.trunk.allowed) + "\n"
               else ''
@@ -125,11 +125,8 @@ in {
           else ifvalue.ip.accessGroup.name
         } ${ifvalue.ip.accessGroup.interface}\n"
         + ifvalue.extraPostConfig
-        + (
-          if ifvalue.shutdown
-          then "shutdown\n"
-          else "no shutdown\n"
-        );
+        + lib.optionalString ifvalue.shutdown "shutdown\n"
+        ;
     in
       self.lib.mkSubTitle device "Interface ${ifname}"
       + "interface ${ifname}\n"
