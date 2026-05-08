@@ -9,7 +9,7 @@ in {
           seperator = lib.mkOption {
             description = "The seperator symbol to use";
             type = lib.types.str;
-            default = "^";
+            default = "`";
           };
           motd = lib.mkOption {
             type = lib.types.lines;
