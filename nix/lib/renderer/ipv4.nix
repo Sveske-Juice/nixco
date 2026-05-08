@@ -7,12 +7,6 @@
 in {
   flake.lib.renderIpv4 = device:
     self.lib.mkSubTitle device "RESET"
-    + ''
-      no ip domain name
-      no ip default-gateway
-      no ip name-server
-      no ip domain lookup
-    ''
     + self.lib.mkSubTitle device "Settings"
     + lib.optionalString (device.ip.domainName != null) "ip domain name ${device.ip.domainName}\n"
     + lib.optionalString (device.ip.defaultGateway != null) "ip default-gateway ${device.ip.defaultGateway}\n"
