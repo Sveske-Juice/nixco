@@ -16,15 +16,18 @@ in {
               else toString acl.id
             }
           ''
-          # TODO: render sequence number
-          + self.lib.indentLines (builtins.concatStringsSep "\n" (map (
-              rule:
+          + self.lib.indentLines (builtins.concatStringsSep "\n" (lib.lists.imap1 (
+              idx: rule:
+                toString (idx*10)
+                + " "
+                +
                 lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
-                + " ${rule.action} ${
+                + "${rule.action} ${
                     if rule.source == "any"
                     then "any"
                     else "${rule.source.addr} ${self.lib.netmask2Wildcard rule.source.netmask}"
-                  }"
+                  } "
+                + lib.optionalString rule.log "log"
             )
             acl.rules))
           + "\n"
@@ -40,8 +43,11 @@ in {
               else toString acl.id
             }
           ''
-          + self.lib.indentLines (builtins.concatStringsSep "\n" (map (
-              rule:
+          + self.lib.indentLines (builtins.concatStringsSep "\n" (lib.lists.imap1 (
+              idx: rule:
+                toString (idx*10)
+                + " "
+                +
                 lib.optionalString (rule.remark != null) "remark \"${rule.remark}\"\n"
                 + "${rule.action} ${rule.protocol} "
                 + "${
