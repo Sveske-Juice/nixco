@@ -37,13 +37,7 @@ in {
       if ifvalue.switchport.enable
       then
         (
-          ''
-            switchport mode ${ifvalue.switchport.mode}
-          ''
-          + lib.optionalString (!ifvalue.switchport.negotiate) "switchport nonegotiate\n"
-          + lib.optionalString (ifvalue.switchport.mode == "access")
-          "switchport access vlan ${toString ifvalue.switchport.vlan}\n"
-          + lib.optionalString (ifvalue.switchport.mode == "trunk")
+          lib.optionalString (ifvalue.switchport.mode == "trunk")
           (
             ''
               switchport trunk native vlan ${toString ifvalue.switchport.trunk.nativeVLAN}
@@ -56,6 +50,13 @@ in {
                 switchport trunk allowed vlan ${ifvalue.switchport.trunk.allowed}
               ''
             )
+          +
+          ''
+            switchport mode ${ifvalue.switchport.mode}
+          ''
+          + lib.optionalString (!ifvalue.switchport.negotiate) "switchport nonegotiate\n"
+          + lib.optionalString (ifvalue.switchport.mode == "access")
+          "switchport access vlan ${toString ifvalue.switchport.vlan}\n"
           )
           + lib.optionalString (ifvalue.switchport.portSecurity != null) (
             ''

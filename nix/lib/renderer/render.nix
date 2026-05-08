@@ -30,13 +30,13 @@ in {
       ''
       + lib.optionalString (device.hostname != null) "hostname ${device.hostname}\n"
       + self.lib.mkTitle device "Banners"
-      + lib.optionalString (device.banner.motd != "") "banner motd ${device.banner.seperator}${device.banner.motd}${device.banner.seperator}\n"
-      + lib.optionalString (device.banner.login != "") "banner login ${device.banner.seperator}${device.banner.login}${device.banner.seperator}\n"
-      + lib.optionalString (device.banner.configSave != "") "banner config-save ${device.banner.seperator}${device.banner.configSave}${device.banner.seperator}\n"
-      + lib.optionalString (device.banner.exec != "") "banner exec ${device.banner.seperator}${device.banner.exec}${device.banner.seperator}\n"
-      + lib.optionalString (device.banner.incoming != "") "banner incoming ${device.banner.seperator}${device.banner.incoming}${device.banner.seperator}\n"
-      + lib.optionalString (device.banner.promptTimeout != "") "banner prompt-timeout ${device.banner.seperator}${device.banner.promptTimeout}${device.banner.seperator}\n"
-      + lib.optionalString (device.banner.slipPPP != "") "banner slip-ppp ${device.banner.seperator}${device.banner.slipPPP}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.motd != "") "banner motd ${device.banner.seperator}\n${device.banner.motd}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.login != "") "banner login ${device.banner.seperator}\n${device.banner.login}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.configSave != "") "banner config-save ${device.banner.seperator}\n${device.banner.configSave}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.exec != "") "banner exec ${device.banner.seperator}\n${device.banner.exec}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.incoming != "") "banner incoming ${device.banner.seperator}\n${device.banner.incoming}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.promptTimeout != "") "banner prompt-timeout ${device.banner.seperator}\n${device.banner.promptTimeout}${device.banner.seperator}\n"
+      + lib.optionalString (device.banner.slipPPP != "") "banner slip-ppp ${device.banner.seperator}${device.banner.slipPPP}\n${device.banner.seperator}\n"
       + self.lib.renderUsers device
       + lib.optionalString (device.deviceSpec.deviceType == "switch")
       (
