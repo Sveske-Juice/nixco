@@ -11,6 +11,10 @@ in {
               type = lib.types.ints.between 1 4096;
               example = 999;
             };
+            remoteSpan = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+            };
           };
         });
       };

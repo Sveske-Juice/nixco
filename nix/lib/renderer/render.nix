@@ -45,7 +45,9 @@ in {
         (lib.concatMapAttrsStringSep "" (name: vlan: ''
           vlan ${toString vlan.id}
            name ${name}
-        '')
+        ''
+        + lib.optionalString vlan.remoteSpan " remote-span\n"
+        )
           device.vlans)
       )
       + self.lib.renderKeys device
