@@ -136,21 +136,24 @@ std::expected<std::string, int> Strategy::wait_for_prompt(Transport& transport, 
 }
 
 std::optional<std::string> Strategy::apply(Transport &transport, const CliParser &cliparser, const std::string &config, const bool print) const {
-  auto mode = get_to_mode(transport, GCFG, print);
+  auto mode = get_to_mode(transport, PEXEC, print);
   if (!mode) return mode.error();
 
-  spdlog::info("Sucess! We are in Global conf Mode");
+  spdlog::info("Sucess! We are in PEXEC Mode");
   spdlog::info("Entering TCL Scripting");
 
+  auto err = transport.write("terminal length 0\n");
+  if (err) return err;
+
   // Upload config to flash
-  auto err = uploadFile(transport, config, "flash:nixco.cfg");
+  err = uploadFile(transport, config, "flash:nixco.cfg");
   if (err) return err;
 
   spdlog::info("Purging flash:vlan.dat");
   deleteFile(transport, "flash:vlan.dat");
 
   spdlog::info("Replace startup-config with flash:nixco.cfg");
-  err = transport.write("copy flash:nixco.cfg startup-config\n");
+  err = transport.write("copy flash:nixco.cfg startup-config\n\n");
   if (err) return err;
 
   // Should return to prompt after copying
@@ -297,15 +300,15 @@ std::optional<std::string> ReplaceStrategy::apply(Transport &transport, const Cl
   spdlog::info("Sucess! We are in PEXEC Mode");
   spdlog::info("Entering TCL Scripting");
 
+  auto err = transport.write("terminal length 0\n");
+  if (err) return err;
+
   // Upload config to flash
-  auto err = uploadFile(transport, config, "flash:nixco.cfg");
+  err = uploadFile(transport, config, "flash:nixco.cfg");
   if (err) return err;
 
   spdlog::info("Purging flash:vlan.dat");
   deleteFile(transport, "flash:vlan.dat");
-
-  err = transport.write("terminal length 0\n");
-  if (err) return err;
 
   spdlog::info("Replacing running-config with flash:nixco.cfg");
   err = transport.write("configure replace flash:nixco.cfg force\n");
@@ -328,7 +331,7 @@ std::optional<std::string> Strategy::reload_device(Transport &transport) const {
   auto err = transport.write("reload\n\n");
   if (err) return err;
 
-  err = transport.write("n\n");
+  err = transport.write("\n\n");
   if (err) return err;
 
   auto prompt = wait_for_prompt(transport, "Proceed with reload", true);
